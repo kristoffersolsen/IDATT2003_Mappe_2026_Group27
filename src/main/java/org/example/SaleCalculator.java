@@ -1,4 +1,4 @@
 package org.example;
 
-public class SaleCalculator {
+public class SaleCalculator implements TransactionCalculator{
 }
