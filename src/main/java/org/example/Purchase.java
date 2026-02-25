@@ -24,11 +24,14 @@ public class Purchase extends Transaction{
 
         // Check if transaction has been performed before
         TransactionArchive archive = player.getTransactionArchive();
-        if (archive.contains(this)) {
-            return;
+        if (archive.getTransactions().contains(this)) {
+            throw new IllegalArgumentException("This transaction has already been performed.");
         }
 
-        if (player.getmoney())
+        // Check if player has enough money to perform transaction
+        if (player.getMoney().compareTo(this.calculator.calculateTotal()) < 0) {
+            throw new IllegalArgumentException("Player does not have enough money to perform this transaction.");
+        }
 
         player.withdrawMoney(this.calculator.calculateTotal());
         player.getPortfolio().addShare(this.share);
