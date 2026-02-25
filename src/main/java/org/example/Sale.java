@@ -21,15 +21,16 @@ public class Sale extends Transaction{
      */
     @Override
     public void commit(Player player) {
-        Portfolio portfolio = player.getportfolio();
+        Portfolio portfolio = player.getPortfolio();
+
         // Check if player portfolio has the share
         if (!portfolio.contains(share)) {
-            return;
+            throw new IllegalArgumentException("Player does not have this share in their portfolio.");
         }
         // Check if transaction has been performed before
         TransactionArchive archive = player.getTransactionArchive();
-        if (archive.contains(this)) {
-            return;
+        if (archive.getTransactions().contains(this)) {
+            throw new IllegalArgumentException("This transaction has already been performed.");
         }
         player.addMoney(this.calculator.calculateTotal());
         player.getPortfolio().removeShare(share);
