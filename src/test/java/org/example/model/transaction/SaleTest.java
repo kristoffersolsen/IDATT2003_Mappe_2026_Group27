@@ -1,5 +1,8 @@
-package org.example;
+package org.example.model.transaction;
 
+import org.example.model.Player;
+import org.example.model.Share;
+import org.example.model.Stock;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
