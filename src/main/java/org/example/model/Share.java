@@ -1,4 +1,4 @@
-package org.example;
+package org.example.model;
 
 import java.math.BigDecimal;
 
@@ -17,21 +17,21 @@ public class Share {
      * @param quantity Quantity of the stock
      * @param purchasePrice The purchaseprice of the stock
      */
-    Share(Stock stock, BigDecimal quantity, BigDecimal purchasePrice) {
+    public Share(Stock stock, BigDecimal quantity, BigDecimal purchasePrice) {
         this.stock = stock;
         this.quantity = quantity;
         this.purchasePrice = purchasePrice;
     }
 
-    Stock getStock() {
+    public Stock getStock() {
         return this.stock;
     }
 
-    BigDecimal getQuantity() {
+    public BigDecimal getQuantity() {
         return this.quantity;
     }
 
-    BigDecimal getPurchasePrice() {
+    public BigDecimal getPurchasePrice() {
         return this.purchasePrice;
     }
 }
