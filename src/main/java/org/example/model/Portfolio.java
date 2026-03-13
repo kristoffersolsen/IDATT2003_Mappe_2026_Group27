@@ -5,14 +5,26 @@ import org.example.model.transaction.SaleCalculator;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
+/**
+ * The portfolio of a player.
+ */
 public class Portfolio {
 
-  private ArrayList<Share> shares;
+  private final ArrayList<Share> shares;
 
+  /**
+   * Default constructor.
+   */
   public Portfolio() {
     shares = new ArrayList<>();
   }
 
+  /**
+   * Adds a share to the portfolio if it does not already exist.
+   *
+   * @param share share to add
+   * @return true on success, false on failure
+   */
   public boolean addShare(Share share) {
     if (!this.shares.contains(share)) {
       this.shares.add(share);
@@ -21,6 +33,12 @@ public class Portfolio {
     return false;
   }
 
+  /**
+   * Removes a share from the portfolio if it exists.
+   *
+   * @param share share to remove
+   * @return true if share exists, false otherwise
+   */
   public boolean removeShare(Share share) {
     if (this.shares.contains(share)) {
       this.shares.remove(share);
@@ -37,7 +55,7 @@ public class Portfolio {
     ArrayList<Share> returnList = new ArrayList<>();
 
     for (Share share : shares) {
-      if (share.getStock().getCompany().equals(symbol)) {
+      if (share.stock().getCompany().equals(symbol)) {
         returnList.add(share);
       }
     }
@@ -47,12 +65,13 @@ public class Portfolio {
 
   /**
    * Checks if the Portfolio contains the share
+   *
    * @param shareToCheckFor The share to check for
    * @return True or False
    */
   public boolean contains(Share shareToCheckFor) {
     for (Share share : shares) {
-      if (share.getStock().equals(shareToCheckFor.getStock())) {
+      if (share.stock().equals(shareToCheckFor.stock())) {
         return true;
       }
     }
@@ -61,12 +80,13 @@ public class Portfolio {
 
   /**
    * Sums up the value of all shares in the portfolio.
-   * @return
+   *
+   * @return the net worth of the profile
    */
   public BigDecimal getNetWorth() {
     return shares.stream()
-            .map(share -> new SaleCalculator(share).calculateTotal())
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        .map(share -> new SaleCalculator(share).calculateTotal())
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
   }
 
 }

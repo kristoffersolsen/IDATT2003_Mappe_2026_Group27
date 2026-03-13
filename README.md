@@ -4,5 +4,5 @@
 
 Class Diagram:
 
-<a href="https://drive.google.com/file/d/1oTcjteVwJOcALOYnrfRoPtNuZConQdgw/view?usp=sharing">edit here </a> 
+<a href="https://drive.google.com/file/d/1oTcjteVwJOcALOYnrfRoPtNuZConQdgw/view?usp=sharing">edit here </a>
 <img width="1611" height="1059" alt="class_diagram" src="https://github.com/kristoffersolsen/IDATT2003_Mappe_2026_Group27/blob/main/documents/class_diagram.png" />

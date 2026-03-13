@@ -6,73 +6,88 @@ import com.opencsv.exceptions.CsvValidationException;
 import org.example.model.Stock;
 import org.example.model.StockFileRecord;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
+/**
+ * Contains information when reading/writing from a file. Used by Exchange to save its state.
+ */
 public class StockFileService {
-    private static final String FILE_HEADER = "#Symbol, Name, Price";
-    private static final String PATH_TO_FILES = System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
-    /**
-     * Writes a list of Stocks to a file with a header description.
-     * @param stockFileRecord StockFilerecord to write, containing list of Stocks, filename and description
-     * @throws IOException
-     */
-    public static void writeStocks(StockFileRecord stockFileRecord) throws IOException {
-        File dir = new File(PATH_TO_FILES);
-        if (!dir.exists()) dir.mkdirs();
+  private static final String FILE_HEADER = "#Symbol, Name, Price";
+  private static final String PATH_TO_FILES = System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
 
-        try (CSVWriter writer = new CSVWriter(new FileWriter(PATH_TO_FILES + stockFileRecord.getFileName()))) {
-            // Write description as a metadata row
-            if (stockFileRecord.getDescription() != null)
-                writer.writeNext(new String[]{"metadata", "description", stockFileRecord.getDescription()});
-            if (stockFileRecord.getWeek() != -1)
-                writer.writeNext(new String[]{"metadata", "week", String.valueOf(stockFileRecord.getWeek())});
-
-
-            writer.writeNext(new String[]{"Symbol", "Name", "Price"});
-
-            for (Stock stock : stockFileRecord.getStocks()) {
-                writer.writeNext(stock.toStringList());
-            }
-        }
+  /**
+   * Writes a list of Stocks to a file with a header description.
+   *
+   * @param stockFileRecord StockFilerecord to write, containing list of Stocks, filename and description
+   * @throws IOException unable to write
+   */
+  public static void writeStocks(StockFileRecord stockFileRecord) throws IOException {
+    File dir = new File(PATH_TO_FILES);
+    if (!dir.exists()) {
+      dir.mkdirs();
     }
 
-    /**
-     * Reads a file containing stocks
-     * @param fileName file name to read from
-     * @return a StockFileRecord
-     * @throws IOException
-     */
-    public static StockFileRecord readStocks(String fileName) throws IOException {
-        List<Stock> stocks = new ArrayList<>();
-        String description = null;
-        int week = -1;
+    try (CSVWriter writer = new CSVWriter(new FileWriter(PATH_TO_FILES + stockFileRecord.getFileName()))) {
+      // Write description as a metadata row
+      if (stockFileRecord.getDescription() != null) {
+        writer.writeNext(new String[] {"metadata", "description", stockFileRecord.getDescription()});
+      }
+      if (stockFileRecord.getWeek() != -1) {
+        writer.writeNext(new String[] {"metadata", "week", String.valueOf(stockFileRecord.getWeek())});
+      }
 
-        try (CSVReader reader = new CSVReader(new FileReader(PATH_TO_FILES + fileName))) {
 
-            // read metadata
-            String[] line;
-            while ((line = reader.readNext()) != null) {
-                if (!line[0].equals("metadata")) break;
+      writer.writeNext(new String[] {"Symbol", "Name", "Price"});
 
-                switch (line[1]) {
-                    case "description" -> description = line[2];
-                    case "week" -> week = Integer.parseInt(line[2]);
-                }
-            }
+      for (Stock stock : stockFileRecord.getStocks()) {
+        writer.writeNext(stock.toStringList());
+      }
+    }
+  }
 
-            // read the main csv data
-            String[] fields;
-            while ((fields = reader.readNext()) != null) {
-                stocks.add(new Stock(fields[0], fields[1], new BigDecimal(fields[2])));
-            }
-        } catch (CsvValidationException e) {
-            throw new IOException("Failed to parse CSV: " + e.getMessage(), e);
+  /**
+   * Reads a file containing stocks
+   *
+   * @param fileName file name to read from
+   * @return a StockFileRecord
+   * @throws IOException unable to read from file
+   */
+  public static StockFileRecord readStocks(String fileName) throws IOException {
+    List<Stock> stocks = new ArrayList<>();
+    String description = null;
+    int week = -1;
+
+    try (CSVReader reader = new CSVReader(new FileReader(PATH_TO_FILES + fileName))) {
+
+      // read metadata
+      String[] line;
+      while ((line = reader.readNext()) != null) {
+        if (!line[0].equals("metadata")) {
+          break;
         }
 
-        return new StockFileRecord(stocks, fileName, description, week);
+        switch (line[1]) {
+          case "description" -> description = line[2];
+          case "week" -> week = Integer.parseInt(line[2]);
+          default -> throw new CsvValidationException("invalid metatada");
+        }
+      }
+
+      // read the main csv data
+      String[] fields;
+      while ((fields = reader.readNext()) != null) {
+        stocks.add(new Stock(fields[0], fields[1], new BigDecimal(fields[2])));
+      }
+    } catch (CsvValidationException e) {
+      throw new IOException("Failed to parse CSV: " + e.getMessage(), e);
     }
+
+    return new StockFileRecord(stocks, fileName, description, week);
+  }
 }
