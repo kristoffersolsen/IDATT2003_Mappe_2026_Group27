@@ -1,4 +1,8 @@
-package org.example;
+package org.example.model.transaction;
+
+import org.example.model.transaction.TransactionCalculator;
+import org.example.model.Player;
+import org.example.model.Share;
 
 /**
  * Abstract class for all transactions

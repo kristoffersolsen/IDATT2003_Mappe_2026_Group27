@@ -1,11 +1,14 @@
-package org.example;
+package org.example.model.transaction;
+
+import org.example.model.transaction.TransactionCalculator;
+import org.example.model.Share;
 
 import java.math.BigDecimal;
 
 /**
  * Calculators for when a share is purchased.
  */
-public class PurchaseCalculator implements TransactionCalculator{
+public class PurchaseCalculator implements TransactionCalculator {
     private BigDecimal purchasePrice;
     private BigDecimal quantity;
 
@@ -13,7 +16,7 @@ public class PurchaseCalculator implements TransactionCalculator{
      *
      * @param share The share to calculate on
      */
-    PurchaseCalculator(Share share) {
+    public PurchaseCalculator(Share share) {
         this.purchasePrice = share.getPurchasePrice();
         this.quantity = share.getQuantity();
     }

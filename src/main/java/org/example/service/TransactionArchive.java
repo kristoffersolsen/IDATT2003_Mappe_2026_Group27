@@ -1,4 +1,8 @@
-package org.example;
+package org.example.service;
+
+import org.example.model.transaction.Purchase;
+import org.example.model.transaction.Sale;
+import org.example.model.transaction.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;

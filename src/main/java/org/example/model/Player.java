@@ -1,4 +1,6 @@
-package org.example;
+package org.example.model;
+
+import org.example.service.TransactionArchive;
 
 import java.math.BigDecimal;
 
@@ -8,6 +10,7 @@ public class Player {
     private BigDecimal money;
     private Portfolio portfolio;
     private TransactionArchive transactionArchive;
+    private Status status;
 
     public Player(String name, BigDecimal startingMoney) {
         this.name = name;
@@ -15,6 +18,7 @@ public class Player {
         this.money = startingMoney;
         this.portfolio = new Portfolio();
         this.transactionArchive = new TransactionArchive();
+        this.status = Status.NOVICE;
     }
 
     public String getName() {
@@ -39,6 +43,25 @@ public class Player {
 
     public TransactionArchive getTransactionArchive() {
         return transactionArchive;
+    }
+
+    public BigDecimal getNetWorth() {
+        return this.portfolio.getNetWorth().add(this.money);
+    }
+
+    /**
+     * Checks the week and net worth growth to determine player status.
+     * @param week
+     * @return
+     */
+    public Status getStatus(int week) {
+        if (week >= 20 && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(2))) >= 0) {
+            return Status.SPECULATOR;
+        } else if (week >= 10 && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(1.2))) >= 0) {
+            return Status.INVESTOR;
+        } else {
+            return Status.INVESTOR;
+        }
     }
 }
 

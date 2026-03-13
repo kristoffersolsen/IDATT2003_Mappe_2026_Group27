@@ -1,16 +1,20 @@
-package org.example;
+package org.example.model.transaction;
+
+import org.example.service.TransactionArchive;
+import org.example.model.Player;
+import org.example.model.Share;
 
 /**
  * A purchase transaction
  */
-public class Purchase extends Transaction{
+public class Purchase extends Transaction {
 
     /**
      *
      * @param share The share to transact
      * @param week The Week of transaction
      */
-    Purchase(Share share, int week) {
+    public Purchase(Share share, int week) {
         super(share, week, new PurchaseCalculator(share));
 
     }

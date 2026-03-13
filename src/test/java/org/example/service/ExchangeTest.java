@@ -1,5 +1,9 @@
-package org.example;
+package org.example.service;
 
+import org.example.model.Player;
+import org.example.model.Share;
+import org.example.model.Stock;
+import org.example.model.transaction.Transaction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +22,7 @@ class ExchangeTest {
                 new Stock("sym2", "companyName2", BigDecimal.valueOf(20)),
                 new Stock("symb3", "companyNam3", BigDecimal.valueOf(30))
         );
-        exchange = new Exchange("exchangeName", stocks);
+        exchange = new Exchange("exchangeName", 1, stocks);
     }
 
     @Test
@@ -58,5 +62,6 @@ class ExchangeTest {
 
     @Test
     void advance() {
+
     }
 }
