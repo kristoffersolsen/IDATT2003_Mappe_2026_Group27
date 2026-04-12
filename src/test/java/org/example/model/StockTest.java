@@ -89,7 +89,7 @@ class StockTest {
     @Test
     @DisplayName("returns null when only one price exists")
     void latestPriceChange_singleEntry_returnsNull() {
-      assertNull(stock.getLatestPriceChange());
+      assertEquals(BigDecimal.ZERO, stock.getLatestPriceChange());
     }
 
     @Test

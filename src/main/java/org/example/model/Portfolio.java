@@ -64,7 +64,7 @@ public class Portfolio {
   }
 
   /**
-   * Checks if the Portfolio contains the share
+   * Checks if the Portfolio contains the share.
    *
    * @param shareToCheckFor The share to check for
    * @return True or False

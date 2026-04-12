@@ -92,7 +92,7 @@ public class Stock {
   public BigDecimal getLatestPriceChange() {
     if (this.prices.size() < 2) {
       System.out.println("Not enough prices for comparison in stock: " + this.symbol);
-      return null;
+      return BigDecimal.ZERO;
     }
     BigDecimal latestPrice = this.prices.get(this.prices.size() - 1);
     BigDecimal nextLatestPrice = this.prices.get(this.prices.size() - 2);

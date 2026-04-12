@@ -36,7 +36,8 @@ public class Purchase extends Transaction {
 
     // Check if player has enough money to perform transaction
     if (player.getMoney().compareTo(this.calculator.calculateTotal()) < 0) {
-      throw new IllegalArgumentException("Player does not have enough money to perform this transaction.");
+      throw new IllegalArgumentException(
+          "Player does not have enough money to perform this transaction.");
     }
 
     player.withdrawMoney(this.calculator.calculateTotal());

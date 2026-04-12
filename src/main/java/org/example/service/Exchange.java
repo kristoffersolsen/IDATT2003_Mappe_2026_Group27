@@ -122,8 +122,8 @@ public class Exchange {
    */
   public List<Stock> findStocks(String searchTerm) {
     return stockMap.values().stream()
-      .filter(stock -> stock.getCompany().toLowerCase().contains(searchTerm.toLowerCase()))
-      .toList();
+        .filter(stock -> stock.getCompany().toLowerCase().contains(searchTerm.toLowerCase()))
+        .toList();
   }
 
   /**
@@ -170,7 +170,8 @@ public class Exchange {
   public void advance() {
     for (Stock stock : stockMap.values()) {
       BigDecimal newPrice =
-        stock.getSalesPrice().multiply(BigDecimal.valueOf(random.nextDouble(LOWER_CHANGE, UPPER_CHANGE)));
+          stock.getSalesPrice()
+              .multiply(BigDecimal.valueOf(1.0 + random.nextDouble(LOWER_CHANGE, UPPER_CHANGE)));
       stock.addNewSalesPrice(newPrice);
     }
     week++;
@@ -184,10 +185,10 @@ public class Exchange {
    */
   public List<Stock> getGainers(int limit) {
     return this.stockMap.values().stream()
-      .filter(stock -> stock.getSalesPrice().signum() > 0)
-      .sorted(Comparator.comparing(Stock::getLatestPriceChange))
-      .limit(limit)
-      .toList();
+        .filter(stock -> stock.getSalesPrice().signum() > 0)
+        .sorted(Comparator.comparing(Stock::getLatestPriceChange).reversed())
+        .limit(limit)
+        .toList();
   }
 
   /**
@@ -198,10 +199,11 @@ public class Exchange {
    */
   public List<Stock> getLosers(int limit) {
     return this.stockMap.values().stream()
-      .filter(stock -> stock.getSalesPrice().signum() < 0)
-      .sorted(Comparator.comparing(Stock::getLatestPriceChange).reversed())
-      .limit(limit)
-      .toList();
+        .filter(stock -> stock.getLatestPriceChange() != null &&
+            stock.getLatestPriceChange().signum() < 0)
+        .sorted(Comparator.comparing(Stock::getLatestPriceChange))
+        .limit(limit)
+        .toList();
   }
 
   /**

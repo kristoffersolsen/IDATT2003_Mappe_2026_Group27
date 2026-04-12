@@ -47,7 +47,8 @@ public class SaleCalculator implements TransactionCalculator {
    * @return The tax
    */
   public BigDecimal calculateTax() {
-    return calculateGross().subtract(calculateCommision()).subtract(this.purchasePrice.multiply(this.quantity));
+    return calculateGross().subtract(calculateCommision())
+        .subtract(this.purchasePrice.multiply(this.quantity));
   }
 
   /**

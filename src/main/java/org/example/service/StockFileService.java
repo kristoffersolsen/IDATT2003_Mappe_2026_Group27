@@ -19,7 +19,8 @@ import java.util.List;
  */
 public class StockFileService {
   private static final String FILE_HEADER = "#Symbol, Name, Price";
-  private static final String PATH_TO_FILES = System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
+  private static final String PATH_TO_FILES =
+      System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
 
   /**
    * Writes a list of Stocks to a file with a header description.
@@ -33,13 +34,16 @@ public class StockFileService {
       dir.mkdirs();
     }
 
-    try (CSVWriter writer = new CSVWriter(new FileWriter(PATH_TO_FILES + stockFileRecord.getFileName()))) {
+    try (CSVWriter writer = new CSVWriter(
+        new FileWriter(PATH_TO_FILES + stockFileRecord.getFileName()))) {
       // Write description as a metadata row
       if (stockFileRecord.getDescription() != null) {
-        writer.writeNext(new String[] {"metadata", "description", stockFileRecord.getDescription()});
+        writer.writeNext(
+            new String[] {"metadata", "description", stockFileRecord.getDescription()});
       }
       if (stockFileRecord.getWeek() != -1) {
-        writer.writeNext(new String[] {"metadata", "week", String.valueOf(stockFileRecord.getWeek())});
+        writer.writeNext(
+            new String[] {"metadata", "week", String.valueOf(stockFileRecord.getWeek())});
       }
 
 

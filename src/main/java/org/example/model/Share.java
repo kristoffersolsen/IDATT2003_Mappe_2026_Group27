@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 public record Share(Stock stock, BigDecimal quantity, BigDecimal purchasePrice) {
 
   /**
-   * Default constructor
+   * Default constructor.
    *
    * @param stock         The stock that has been bought
    * @param quantity      Quantity of the stock

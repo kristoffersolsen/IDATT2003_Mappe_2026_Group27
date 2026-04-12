@@ -1,7 +1,6 @@
 package org.example.model;
 
 import java.math.BigDecimal;
-
 import org.example.service.TransactionArchive;
 
 /**
@@ -77,10 +76,11 @@ public class Player {
   public Status getStatus(int week) {
     if (week >= 20 && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(2))) >= 0) {
       return Status.SPECULATOR;
-    } else if (week >= 10 && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(1.2))) >= 0) {
+    } else if (week >= 10
+        && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(1.2))) >= 0) {
       return Status.INVESTOR;
     } else {
-      return Status.INVESTOR;
+      return Status.NOVICE;
     }
   }
 }
