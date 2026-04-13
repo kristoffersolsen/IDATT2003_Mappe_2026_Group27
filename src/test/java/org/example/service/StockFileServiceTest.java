@@ -2,17 +2,15 @@ package org.example.service;
 
 import org.example.model.Stock;
 import org.example.model.StockFileRecord;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +18,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("StockFileService")
 class StockFileServiceTest {
+
+  @TempDir
+  static Path tempDir;
 
   private List<Stock> sampleStocks() {
     List<Stock> stocks = new ArrayList<>();
@@ -29,26 +30,9 @@ class StockFileServiceTest {
     return stocks;
   }
 
-  private static final String DATA_PATH =
-    System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
-
-  private static final List<String> TEST_FILES = List.of(
-    "rt_count.csv", "rt_sym.csv", "rt_company.csv", "rt_prices.csv",
-    "meta_desc.csv", "meta_week.csv", "meta_nodesc.csv", "meta_noweek.csv",
-    "meta_full.csv", "edge_empty.csv", "edge_single.csv"
-  );
-
-  @AfterAll
-  static void cleanUpTestFiles() {
-    for (String fileName : TEST_FILES) {
-      try {
-        Files.deleteIfExists(Paths.get(DATA_PATH + fileName));
-      } catch (IOException e) {
-        System.err.println("Could not delete test file: " + fileName + " — " + e.getMessage());
-      }
-    }
+  private File tempFile(String name) {
+    return tempDir.resolve(name).toFile();
   }
-
 
   @Nested
   @DisplayName("readStocks / writeStocks round-trip")
@@ -58,8 +42,9 @@ class StockFileServiceTest {
     @DisplayName("stock count is preserved after write-read cycle")
     void stockCountPreserved() throws IOException {
       List<Stock> original = sampleStocks();
-      StockFileService.writeStocks(new StockFileRecord(original, "rt_count.csv"));
-      StockFileRecord record = StockFileService.readStocks("rt_count.csv");
+      File file = tempFile("rt_count.csv");
+      StockFileService.writeStocks(new StockFileRecord(original, file));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertEquals(original.size(), record.getStocks().size());
     }
 
@@ -67,8 +52,9 @@ class StockFileServiceTest {
     @DisplayName("symbols are preserved after write-read cycle")
     void symbolsPreserved() throws IOException {
       List<Stock> original = sampleStocks();
-      StockFileService.writeStocks(new StockFileRecord(original, "rt_sym.csv"));
-      List<Stock> read = StockFileService.readStocks("rt_sym.csv").getStocks();
+      File file = tempFile("rt_sym.csv");
+      StockFileService.writeStocks(new StockFileRecord(original, file));
+      List<Stock> read = StockFileService.readStocks(file).getStocks();
       for (int i = 0; i < original.size(); i++) {
         assertEquals(original.get(i).getSymbol(), read.get(i).getSymbol());
       }
@@ -78,8 +64,9 @@ class StockFileServiceTest {
     @DisplayName("company names are preserved after write-read cycle")
     void companyNamesPreserved() throws IOException {
       List<Stock> original = sampleStocks();
-      StockFileService.writeStocks(new StockFileRecord(original, "rt_company.csv"));
-      List<Stock> read = StockFileService.readStocks("rt_company.csv").getStocks();
+      File file = tempFile("rt_company.csv");
+      StockFileService.writeStocks(new StockFileRecord(original, file));
+      List<Stock> read = StockFileService.readStocks(file).getStocks();
       for (int i = 0; i < original.size(); i++) {
         assertEquals(original.get(i).getCompany(), read.get(i).getCompany());
       }
@@ -89,11 +76,12 @@ class StockFileServiceTest {
     @DisplayName("prices are preserved after write-read cycle")
     void pricesPreserved() throws IOException {
       List<Stock> original = sampleStocks();
-      StockFileService.writeStocks(new StockFileRecord(original, "rt_prices.csv"));
-      List<Stock> read = StockFileService.readStocks("rt_prices.csv").getStocks();
+      File file = tempFile("rt_prices.csv");
+      StockFileService.writeStocks(new StockFileRecord(original, file));
+      List<Stock> read = StockFileService.readStocks(file).getStocks();
       for (int i = 0; i < original.size(); i++) {
         assertEquals(0,
-          original.get(i).getSalesPrice().compareTo(read.get(i).getSalesPrice()));
+            original.get(i).getSalesPrice().compareTo(read.get(i).getSalesPrice()));
       }
     }
   }
@@ -105,45 +93,50 @@ class StockFileServiceTest {
     @Test
     @DisplayName("description is stored and retrieved correctly")
     void descriptionRoundTrip() throws IOException {
+      File file = tempFile("meta_desc.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(sampleStocks(), "meta_desc.csv", "Test description"));
-      StockFileRecord record = StockFileService.readStocks("meta_desc.csv");
+          new StockFileRecord(sampleStocks(), file, "Test description"));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertEquals("Test description", record.getDescription());
     }
 
     @Test
     @DisplayName("week number is stored and retrieved correctly")
     void weekRoundTrip() throws IOException {
+      File file = tempFile("meta_week.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(sampleStocks(), "meta_week.csv", "Desc", 42));
-      StockFileRecord record = StockFileService.readStocks("meta_week.csv");
+          new StockFileRecord(sampleStocks(), file, "Desc", 42));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertEquals(42, record.getWeek());
     }
 
     @Test
     @DisplayName("file without description has null description")
     void noDescriptionIsNull() throws IOException {
+      File file = tempFile("meta_nodesc.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(sampleStocks(), "meta_nodesc.csv"));
-      StockFileRecord record = StockFileService.readStocks("meta_nodesc.csv");
+          new StockFileRecord(sampleStocks(), file));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertNull(record.getDescription());
     }
 
     @Test
     @DisplayName("file without week has week == -1")
     void noWeekIsMinusOne() throws IOException {
+      File file = tempFile("meta_noweek.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(sampleStocks(), "meta_noweek.csv"));
-      StockFileRecord record = StockFileService.readStocks("meta_noweek.csv");
+          new StockFileRecord(sampleStocks(), file));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertEquals(-1, record.getWeek());
     }
 
     @Test
     @DisplayName("both description and week survive a round-trip together")
     void fullMetadataRoundTrip() throws IOException {
+      File file = tempFile("meta_full.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(sampleStocks(), "meta_full.csv", "Full meta", 7));
-      StockFileRecord record = StockFileService.readStocks("meta_full.csv");
+          new StockFileRecord(sampleStocks(), file, "Full meta", 7));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertEquals("Full meta", record.getDescription());
       assertEquals(7, record.getWeek());
     }
@@ -156,20 +149,30 @@ class StockFileServiceTest {
     @Test
     @DisplayName("empty stock list can be written and read back")
     void emptyStockList() throws IOException {
+      File file = tempFile("edge_empty.csv");
       StockFileService.writeStocks(
-        new StockFileRecord(new ArrayList<>(), "edge_empty.csv"));
-      StockFileRecord record = StockFileService.readStocks("edge_empty.csv");
+          new StockFileRecord(new ArrayList<>(), file));
+      StockFileRecord record = StockFileService.readStocks(file);
       assertTrue(record.getStocks().isEmpty());
     }
 
     @Test
     @DisplayName("single stock survives round-trip")
     void singleStock() throws IOException {
-      List<Stock> single = List.of(new Stock("ONE", "One Corp", BigDecimal.valueOf(99.99)));
-      StockFileService.writeStocks(new StockFileRecord(single, "edge_single.csv"));
-      List<Stock> read = StockFileService.readStocks("edge_single.csv").getStocks();
+      File file = tempFile("edge_single.csv");
+      List<Stock> single = List.of(
+          new Stock("ONE", "One Corp", BigDecimal.valueOf(99.99)));
+      StockFileService.writeStocks(new StockFileRecord(single, file));
+      List<Stock> read = StockFileService.readStocks(file).getStocks();
       assertEquals(1, read.size());
       assertEquals("ONE", read.get(0).getSymbol());
+    }
+
+    @Test
+    @DisplayName("reading a non-existent file throws IOException")
+    void readNonExistentFileThrows() {
+      File missing = tempDir.resolve("does_not_exist.csv").toFile();
+      assertThrows(IOException.class, () -> StockFileService.readStocks(missing));
     }
   }
 }

@@ -29,13 +29,8 @@ public class StockFileService {
    * @throws IOException unable to write
    */
   public static void writeStocks(StockFileRecord stockFileRecord) throws IOException {
-    File dir = new File(PATH_TO_FILES);
-    if (!dir.exists()) {
-      dir.mkdirs();
-    }
-
     try (CSVWriter writer = new CSVWriter(
-        new FileWriter(PATH_TO_FILES + stockFileRecord.getFileName()))) {
+        new FileWriter(stockFileRecord.getFileName()))) {
       // Write description as a metadata row
       if (stockFileRecord.getDescription() != null) {
         writer.writeNext(
@@ -58,16 +53,16 @@ public class StockFileService {
   /**
    * Reads a file containing stocks
    *
-   * @param fileName file name to read from
+   * @param file file name to read from
    * @return a StockFileRecord
    * @throws IOException unable to read from file
    */
-  public static StockFileRecord readStocks(String fileName) throws IOException {
+  public static StockFileRecord readStocks(File file) throws IOException {
     List<Stock> stocks = new ArrayList<>();
     String description = null;
     int week = -1;
 
-    try (CSVReader reader = new CSVReader(new FileReader(PATH_TO_FILES + fileName))) {
+    try (CSVReader reader = new CSVReader(new FileReader(file))) {
 
       // read metadata
       String[] line;
@@ -92,6 +87,6 @@ public class StockFileService {
       throw new IOException("Failed to parse CSV: " + e.getMessage(), e);
     }
 
-    return new StockFileRecord(stocks, fileName, description, week);
+    return new StockFileRecord(stocks, file, description, week);
   }
 }

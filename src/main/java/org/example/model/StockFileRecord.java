@@ -1,5 +1,6 @@
 package org.example.model;
 
+import java.io.File;
 import org.example.service.StockFileService;
 
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.util.List;
 public class StockFileRecord {
 
   List<Stock> stocks;
-  String fileName;
+  File fileName;
   String description;
   int week;
 
@@ -21,7 +22,7 @@ public class StockFileRecord {
    * @param stocks   stocks to read/write
    * @param fileName the filename
    */
-  public StockFileRecord(List<Stock> stocks, String fileName) {
+  public StockFileRecord(List<Stock> stocks, File fileName) {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = null;
@@ -35,7 +36,7 @@ public class StockFileRecord {
    * @param fileName    Filename
    * @param description description
    */
-  public StockFileRecord(List<Stock> stocks, String fileName, String description) {
+  public StockFileRecord(List<Stock> stocks, File fileName, String description) {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = description;
@@ -50,7 +51,7 @@ public class StockFileRecord {
    * @param description description
    * @param week        weeknumber
    */
-  public StockFileRecord(List<Stock> stocks, String fileName, String description, int week) {
+  public StockFileRecord(List<Stock> stocks, File fileName, String description, int week) {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = description;
@@ -61,7 +62,7 @@ public class StockFileRecord {
     return stocks;
   }
 
-  public String getFileName() {
+  public File getFileName() {
     return this.fileName;
   }
 
