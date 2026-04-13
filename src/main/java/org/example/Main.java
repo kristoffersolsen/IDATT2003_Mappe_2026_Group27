@@ -2,7 +2,9 @@ package org.example;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import org.example.controller.AppController;
 
 /**
  * The main class.
@@ -15,8 +17,12 @@ public class Main extends Application {
     stage.setTitle("Millions — Stock Trading Game");
     stage.setMinWidth(900);
     stage.setMinHeight(600);
-    //stage.setScene(scene);
+
+    Scene scene = new Scene(new Region(), 900, 600);
+    stage.setScene(scene);
     stage.show();
+
+    new AppController(stage);
   }
 
   /**
@@ -24,6 +30,6 @@ public class Main extends Application {
    * @param args
    */
   public static void main(String[] args) {
-
+    launch(args);
   }
 }
