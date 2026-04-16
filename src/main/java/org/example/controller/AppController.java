@@ -32,20 +32,6 @@ public class AppController {
   }
 
   /**
-   * Shows the start screen.
-   *
-   * <p>Creates a fresh {@link StartView} and {@link StartController} each time,
-   * so restarting a game always presents a clean form.
-   */
-  public void showStartScreen() {
-    StartView startView = new StartView();
-    new StartController(startView, stage, this);
-
-    stage.getScene().setRoot(startView.getRoot());
-    stage.setTitle("Millions");
-  }
-
-  /**
    * Transitions to the end screen after the player ends the game.
    *
    * <p>Formats the final summary values here so neither the view
