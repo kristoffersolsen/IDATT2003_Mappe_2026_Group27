@@ -21,7 +21,12 @@ public class Main extends Application {
     Scene scene = new Scene(new Region(), 900, 600);
     stage.setScene(scene);
     stage.show();
-
+    try {
+      scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
+    } catch (NullPointerException e) {
+      System.err.println("CSS stylesheet could not be loaded: "  + e.getMessage());
+      return;
+    }
     new AppController(stage);
   }
 

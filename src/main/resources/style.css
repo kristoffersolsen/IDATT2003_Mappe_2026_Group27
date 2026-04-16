@@ -1,0 +1,80 @@
+
+.root {
+    -fx-background-color: #2b2b2b;
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -fx-text-fill: white;
+}
+
+/* ---- Content blocks ---- */
+.content-dark {
+    -fx-background-color: #1e1e1e;
+}
+
+.content-grey {
+    -fx-background-color: #3c3c3c;
+    -fx-border-color: #555555;
+    -fx-border-width: 0 1 0 0;
+}
+
+.content-light-grey {
+    -fx-background-color: #e8e8e8;
+}
+
+
+/* ---- Fonts ---- */
+.font-white {
+   -fx-text-fill: white;
+}
+
+.font-black {
+    -fx-text-fill: #222222;
+}
+
+
+.font-grey { /* for placeholders and empty lists */
+    -fx-text-fill: #aaaaaa;
+}
+
+.font-hero {
+    -fx-font-family: "Exo 2";
+    -fx-font-size: 96px;
+    -fx-font-style: italic;
+    -fx-font-weight: 800;
+}
+
+.font-title {
+   -fx-font-size: 22px;
+   -fx-font-weight: bold;
+}
+
+.font-sub-title {
+   -fx-font-size: 22px;
+   -fx-font-weight: bold;
+}
+
+.font-content {
+    -fx-font-size: 14px;
+}
+
+.font-small {
+    -fx-font-size: 12px;
+}
+
+/* ---- Buttons ---- */
+
+.button-white {
+    -fx-background-color: white;
+    -fx-text-fill: black;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 4px;
+    -fx-font-size: 14px;
+}
+
+.button-light-grey {
+    -fx-background-color: #d9d9d9;
+    -fx-text-fill: black;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 4px;
+    -fx-font-size: 14px;
+}
