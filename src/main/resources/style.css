@@ -82,3 +82,63 @@
     -fx-background-radius: 4px;
     -fx-font-size: 14px;
 }
+
+/* ---- market styles ---- */
+
+.market-search {
+    -fx-background-color: #555555;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #aaaaaa;
+    -fx-background-radius: 4px;
+    -fx-border-width: 0;
+}
+
+.market-list {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+}
+
+.market-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.market-list .list-cell:hover {
+    -fx-background-color: #4a4a4a;
+    -fx-background-radius: 4px;
+}
+
+.market-list .list-cell:selected {
+    -fx-background-color: #555555;
+    -fx-background-radius: 4px;
+}
+
+/* Cell label sizing */
+.market-cell-symbol {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+/* Price change colours */
+.price-up   { -fx-text-fill: #4caf50; }
+.price-down { -fx-text-fill: #f44336; }
+.price-flat { -fx-text-fill: #aaaaaa; }
+
+/* Filter toggle buttons */
+.toggle-filter {
+    -fx-background-color: #555555;
+    -fx-text-fill: white;
+    -fx-background-radius: 12px;
+    -fx-font-size: 12px;
+    -fx-padding: 3 10 3 10;
+    -fx-border-width: 0;
+}
+
+.toggle-filter:selected {
+    -fx-background-color: white;
+    -fx-text-fill: #1e1e1e;
+}
+
+.toggle-filter:hover:!selected {
+    -fx-background-color: #666666;
+}

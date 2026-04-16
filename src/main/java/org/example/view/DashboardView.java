@@ -42,6 +42,8 @@ public class DashboardView {
   private final Button portfolioButton = new Button("Portfolio Details");
   private final Button transactionsButton = new Button("Recent Transactions");
 
+  private final MarketView marketView = new MarketView();
+
   /**
    * Builds the dashboard layout.
    */
@@ -50,7 +52,7 @@ public class DashboardView {
     root.getStyleClass().add("root");
 
     root.setTop(buildTopBar());
-    root.setLeft(buildSidebar());
+    root.setLeft(marketView);
     root.setCenter(buildCenter());
     root.setBottom(buildBottomBar());
   }
@@ -264,5 +266,9 @@ public class DashboardView {
 
   public Button getTransactionsButton() {
     return transactionsButton;
+  }
+
+  public MarketView getMarketView() {
+    return marketView;
   }
 }

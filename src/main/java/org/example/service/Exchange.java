@@ -110,6 +110,15 @@ public class Exchange {
     return stockMap.get(symbol);
   }
 
+  /**
+   * Returns all stocks currently listed on the exchange.
+   *
+   * @return unmodifiable list of all stocks
+   */
+  public List<Stock> getStocks() {
+    return List.copyOf(stockMap.values());
+  }
+
   public StockFileRecord getStockFileRecord() {
     return stockFileRecord;
   }

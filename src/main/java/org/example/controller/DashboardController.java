@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import org.example.model.Player;
+import org.example.model.Stock;
 import org.example.service.Exchange;
 import org.example.util.Format;
 import org.example.view.DashboardView;
@@ -21,7 +22,9 @@ public class DashboardController {
   private final DashboardView view;
   private final Player player;
   private final Exchange exchange;
+
   private final AppController appController;
+  private final MarketController marketController;
 
   private boolean rightPanelVisible = false;
   private String currentRightPanel = "";
@@ -38,11 +41,18 @@ public class DashboardController {
       DashboardView view,
       Player player,
       Exchange exchange,
-      AppController appController) {
+      AppController appController
+  ) {
     this.view = view;
     this.player = player;
     this.exchange = exchange;
     this.appController = appController;
+
+    this.marketController = new MarketController(
+        view.getMarketView(),
+        exchange,
+        this::onStockSelected
+    );
 
     wireAdvanceButton();
     wireEndGameButton();
@@ -50,6 +60,18 @@ public class DashboardController {
     wireTransactionsButton();
 
     refresh();
+  }
+
+  /**
+   * Called by {@link MarketController} when the user selects a stock row.
+   *
+   * <p>Will be expanded to drive the StockDetailController once that view exists.
+   *
+   * @param stock the selected stock
+   */
+  private void onStockSelected(Stock stock) {
+    // TODO: pass to StockDetailController
+    System.out.println("Selected: " + stock.getSymbol());
   }
 
   /**
@@ -86,6 +108,7 @@ public class DashboardController {
   private void onAdvance() {
     exchange.advance();
     refresh();
+    marketController.refresh();
   }
 
   /**
