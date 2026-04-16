@@ -1,28 +1,24 @@
 package org.example.controller;
 
-import org.example.model.Player;
 import org.example.model.Stock;
-import org.example.service.Exchange;
+import org.example.model.observer.GameEvent;
+import org.example.model.observer.GameObserver;
+import org.example.model.Player;
+import org.example.service.ExchangeService;
 import org.example.util.Format;
 import org.example.view.DashboardView;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 /**
  * Controller for the main dashboard.
  *
- * <p>Wires the {@link DashboardView} buttons to their actions and keeps
- * the view in sync with the model after each state change.
- * Child controllers (MarketController, StockDetailController, etc.)
- * will be added here as their views are implemented.
+ * <p>Holds an {@link ExchangeService} for operations and observes the
+ * underlying {@link org.example.model.Exchange} model for state changes.
  */
-public class DashboardController {
+public class DashboardController implements GameObserver {
 
   private final DashboardView view;
   private final Player player;
-  private final Exchange exchange;
-
+  private final ExchangeService exchangeService;
   private final AppController appController;
   private final MarketController marketController;
 
@@ -30,27 +26,30 @@ public class DashboardController {
   private String currentRightPanel = "";
 
   /**
-   * Creates the controller, wires buttons, and performs the initial UI refresh.
+   * Creates the controller, registers as observer, and performs initial refresh.
    *
-   * @param view          the dashboard view
-   * @param player        the active player
-   * @param exchange      the active exchange
-   * @param appController the app-level controller that handles screen transitions
+   * @param view            the dashboard view
+   * @param player          the active player
+   * @param exchangeService the active exchange service
+   * @param appController   the app-level controller
    */
   public DashboardController(
       DashboardView view,
       Player player,
-      Exchange exchange,
-      AppController appController
-  ) {
+      ExchangeService exchangeService,
+      AppController appController) {
     this.view = view;
     this.player = player;
-    this.exchange = exchange;
+    this.exchangeService = exchangeService;
     this.appController = appController;
+
+    // Observe the model objects, not the service
+    exchangeService.getExchange().addObserver(this);
+    player.addObserver(this);
 
     this.marketController = new MarketController(
         view.getMarketView(),
-        exchange,
+        exchangeService,
         this::onStockSelected
     );
 
@@ -62,74 +61,40 @@ public class DashboardController {
     refresh();
   }
 
-  /**
-   * Called by {@link MarketController} when the user selects a stock row.
-   *
-   * <p>Will be expanded to drive the StockDetailController once that view exists.
-   *
-   * @param stock the selected stock
-   */
+  @Override
+  public void onEvent(Object source, GameEvent event) {
+    switch (event) {
+      case WEEK_ADVANCED -> {
+        marketController.refresh();
+        refresh();
+      }
+      case STOCK_PURCHASED, STOCK_SOLD, BALANCE_CHANGED, PORTFOLIO_CHANGED -> refresh();
+      default -> { }
+    }
+  }
+
   private void onStockSelected(Stock stock) {
-    // TODO: pass to StockDetailController
+    // TODO: pass to StockDetailController once implemented
     System.out.println("Selected: " + stock.getSymbol());
   }
 
-  /**
-   * Wires the advance button to move to the next week.
-   */
   private void wireAdvanceButton() {
-    view.getAdvanceButton().setOnAction(e -> onAdvance());
+    view.getAdvanceButton().setOnAction(e -> exchangeService.advance());
   }
 
-  /**
-   * Wires the end game button to sell all holdings and transition to the end screen.
-   */
   private void wireEndGameButton() {
-    view.getEndGameButton().setOnAction(e -> onEndGame());
+    view.getEndGameButton().setOnAction(
+        e -> appController.showEndScreen(player, exchangeService));
   }
 
-  /**
-   * Wires the portfolio button to toggle the portfolio panel.
-   */
   private void wirePortfolioButton() {
     view.getPortfolioButton().setOnAction(e -> toggleRightPanel("portfolio"));
   }
 
-  /**
-   * Wires the transactions button to toggle the transactions panel.
-   */
   private void wireTransactionsButton() {
     view.getTransactionsButton().setOnAction(e -> toggleRightPanel("transactions"));
   }
 
-  /**
-   * Advances the exchange by one week and refreshes the view.
-   */
-  private void onAdvance() {
-    exchange.advance();
-    refresh();
-    marketController.refresh();
-  }
-
-  /**
-   * Ends the game by transitioning to the end screen.
-   *
-   * <p>Sells all holdings first so the net worth shown on the end screen
-   * reflects only cash. Full sell-all logic will be added once
-   * the portfolio and transaction infrastructure is complete.
-   */
-  private void onEndGame() {
-    appController.showEndScreen(player, exchange);
-  }
-
-  /**
-   * Toggles the right panel open or closed.
-   *
-   * <p>If the same panel is requested while already open, it closes.
-   * If a different panel is requested, it replaces the current one.
-   *
-   * @param panelName the panel to show — "portfolio" or "transactions"
-   */
   private void toggleRightPanel(String panelName) {
     if (rightPanelVisible && currentRightPanel.equals(panelName)) {
       view.setRightPanel(null);
@@ -142,15 +107,6 @@ public class DashboardController {
     }
   }
 
-  /**
-   * Temporary placeholder panel builder.
-   *
-   * <p>Will be replaced by real PortfolioView and TransactionView nodes
-   * once those classes are implemented.
-   *
-   * @param panelName the panel name to display as a title
-   * @return a minimal VBox placeholder
-   */
   private javafx.scene.layout.VBox buildPlaceholderPanel(String panelName) {
     javafx.scene.control.Label title = new javafx.scene.control.Label(
         panelName.equals("portfolio") ? "Portfolio" : "Recent Transactions");
@@ -166,16 +122,11 @@ public class DashboardController {
     return panel;
   }
 
-  /**
-   * Refreshes all live values in the view to reflect the current model state.
-   *
-   * <p>Called after every state-changing action (advance, buy, sell).
-   */
   private void refresh() {
-    view.setWeek(exchange.getWeek());
+    view.setWeek(exchangeService.getExchange().getWeek());
     view.updatePlayerInfo(
         player.getName(),
-        player.getStatus(exchange.getWeek()).getStatus(),
+        player.getStatus(exchangeService.getExchange().getWeek()).getStatus(),
         Format.formatMoney(player.getNetWorth()),
         Format.formatMoney(player.getMoney()),
         Format.formatMoney(player.getPortfolio().getNetWorth()));

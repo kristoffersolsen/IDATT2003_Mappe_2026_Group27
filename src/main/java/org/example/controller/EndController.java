@@ -33,7 +33,7 @@ public class EndController {
    * Wires the new game button to return to the start screen.
    */
   private void wireNewGameButton() {
-    view.getNewGameButton().setOnAction(e -> appController.showStart());
+    view.getNewGameButton().setOnAction(e -> appController.showStartScreen());
   }
 
   /**

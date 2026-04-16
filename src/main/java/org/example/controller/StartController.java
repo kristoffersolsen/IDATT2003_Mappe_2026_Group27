@@ -6,10 +6,16 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.example.model.Player;
 import org.example.model.StockFileRecord;
-import org.example.service.Exchange;
+import org.example.service.ExchangeService;
 import org.example.service.StockFileService;
 import org.example.view.StartView;
 
+/**
+ * Controller for the start screen.
+ *
+ * <p>Validates user input and hands off to {@link AppController} to begin
+ * the game once a valid configuration is provided.
+ */
 public class StartController {
 
   private final StartView view;
@@ -20,9 +26,10 @@ public class StartController {
 
   /**
    * Constructor.
-   * @param view
-   * @param stage
-   * @param appController
+   *
+   * @param view          the start view
+   * @param stage         the primary stage
+   * @param appController the app-level controller
    */
   public StartController(StartView view, Stage stage, AppController appController) {
     this.view = view;
@@ -33,56 +40,43 @@ public class StartController {
     wireStartButton();
   }
 
-  /**
-   * Wires the button to select the file. Controller holds file since it it directly used here.
-   */
   private void wireFileBrowseButton() {
-    view.getBrowseButton().setOnAction(e  -> {
-      File file = view.showFileChooser(stage);
-      if (file != null) {
-        this.file = file;
-        view.setFileName(file.getName());
+    view.getBrowseButton().setOnAction(e -> {
+      File chosen = view.showFileChooser(stage);
+      if (chosen != null) {
+        this.file = chosen;
+        view.setFileName(chosen.getName());
       }
-        }
-    );
+    });
   }
 
-  /**
-   * Wires the start button. Calls the onStart method.
-   */
   private void wireStartButton() {
-    view.getStartButton().setOnAction(e  -> onStart());
+    view.getStartButton().setOnAction(e -> onStart());
   }
 
-  /**
-   * Validates user input, displays correct error messages and starts the game.
-   */
   private void onStart() {
     String name = view.getPlayerName();
     String startingCapital = view.getStartingCapital();
 
-    // Checking name
     if (name.isEmpty()) {
       view.showError("Player name is empty");
       return;
     }
-
-    // Validating starting capital
     if (startingCapital.isEmpty()) {
-      view.showError("Start capital is empty");
+      view.showError("Starting capital is empty");
       return;
     }
+
     BigDecimal capital;
     try {
       capital = new BigDecimal(startingCapital);
     } catch (NumberFormatException e) {
-      view.showError("Start capital is not a valid number");
+      view.showError("Starting capital is not a valid number");
       return;
     }
 
-    // Validating file input
     if (file == null) {
-      view.showError("Select a file");
+      view.showError("Please select a stock data file");
       return;
     }
 
@@ -94,10 +88,9 @@ public class StartController {
       return;
     }
 
-    // Start game
     Player player = new Player(name, capital);
-    Exchange exchange = new Exchange("Main Exchange", stockFile);
+    ExchangeService exchangeService = new ExchangeService("Main Exchange", stockFile);
 
-    appController.startGame(player, exchange);
+    appController.startGame(player, exchangeService);
   }
 }

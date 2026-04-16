@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Exchange")
 class ExchangeTest {
 
-  private Exchange exchange;
+  private ExchangeService exchange;
   private List<Stock> stocks;
 
   @BeforeEach
@@ -29,7 +29,7 @@ class ExchangeTest {
       new Stock("BBB", "Company B", BigDecimal.valueOf(20)),
       new Stock("CCC", "Company C", BigDecimal.valueOf(30))
     );
-    exchange = new Exchange("Exchange A", 1, stocks);
+    exchange = new ExchangeService("Exchange A", 1, stocks);
   }
 
   @Nested

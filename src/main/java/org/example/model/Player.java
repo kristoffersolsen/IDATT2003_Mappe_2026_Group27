@@ -2,17 +2,24 @@ package org.example.model;
 
 import java.math.BigDecimal;
 import org.example.service.TransactionArchive;
+import org.example.model.observer.GameEvent;
+import org.example.model.observer.GameObserver;
+import org.example.model.observer.Observable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Player class that reperesents a player.
  */
-public class Player {
+public class Player extends Observable {
   private final String name;
   private final BigDecimal startingMoney;
   private BigDecimal money;
   private final Portfolio portfolio;
   private final TransactionArchive transactionArchive;
   private final Status status;
+
+  private final List<GameObserver> observers = new ArrayList<>();
 
   /**
    * Default constructor.
@@ -44,6 +51,7 @@ public class Player {
    */
   public void addMoney(BigDecimal amount) {
     this.money = this.money.add(amount);
+    notifyObservers(GameEvent.BALANCE_CHANGED); // ADD THIS LINE
   }
 
   /**
@@ -53,6 +61,7 @@ public class Player {
    */
   public void withdrawMoney(BigDecimal amount) {
     this.money = this.money.subtract(amount);
+    notifyObservers(GameEvent.BALANCE_CHANGED);
   }
 
   public Portfolio getPortfolio() {
