@@ -21,6 +21,10 @@
     -fx-background-color: #e8e8e8;
 }
 
+.content-white {
+    -fx-background-color: white;
+}
+
 
 /* ---- Fonts ---- */
 .font-white {
