@@ -1,5 +1,6 @@
 package org.example.service;
 
+import org.example.model.Exchange;
 import org.example.model.Player;
 import org.example.model.Share;
 import org.example.model.Stock;
@@ -16,20 +17,22 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Exchange")
+@DisplayName("ExchangeService")
 class ExchangeTest {
 
-  private ExchangeService exchange;
+  private Exchange exchange;
+  private ExchangeService exchangeService;
   private List<Stock> stocks;
 
   @BeforeEach
   void setUp() {
     stocks = List.of(
-      new Stock("AAA", "Company A", BigDecimal.valueOf(10)),
-      new Stock("BBB", "Company B", BigDecimal.valueOf(20)),
-      new Stock("CCC", "Company C", BigDecimal.valueOf(30))
+        new Stock("AAA", "Company A", BigDecimal.valueOf(10)),
+        new Stock("BBB", "Company B", BigDecimal.valueOf(20)),
+        new Stock("CCC", "Company C", BigDecimal.valueOf(30))
     );
-    exchange = new ExchangeService("Exchange A", 1, stocks);
+    exchange = new Exchange("Exchange A", 1, stocks);
+    exchangeService = new ExchangeService(exchange);
   }
 
   @Nested
@@ -69,23 +72,31 @@ class ExchangeTest {
     @Test
     @DisplayName("finds all stocks whose company name contains the search term")
     void findsMatchingStocks() {
-      List<Stock> result = exchange.findStocks("Company");
+      List<Stock> result = exchangeService.findStocks("Company");
       assertEquals(3, result.size());
     }
-    
+
     @Test
     @DisplayName("returns empty list when no stocks match")
     void returnsEmptyForNoMatch() {
-      List<Stock> result = exchange.findStocks("Company Z");
+      List<Stock> result = exchangeService.findStocks("Company Z");
       assertTrue(result.isEmpty());
     }
 
     @Test
     @DisplayName("partial name match works")
     void partialNameMatch() {
-      List<Stock> result = exchange.findStocks("B");
+      List<Stock> result = exchangeService.findStocks("B");
       assertEquals(1, result.size());
       assertEquals("BBB", result.get(0).getSymbol());
+    }
+
+    @Test
+    @DisplayName("symbol match works")
+    void symbolMatch() {
+      List<Stock> result = exchangeService.findStocks("AAA");
+      assertEquals(1, result.size());
+      assertEquals("AAA", result.get(0).getSymbol());
     }
   }
 
@@ -97,7 +108,7 @@ class ExchangeTest {
     @DisplayName("successful buy returns a committed Purchase transaction")
     void successfulBuy() {
       Player player = new Player("Buyer", BigDecimal.valueOf(1000));
-      Transaction tx = exchange.buy("AAA", BigDecimal.ONE, player);
+      Transaction tx = exchangeService.buy("AAA", BigDecimal.ONE, player);
       assertInstanceOf(Purchase.class, tx);
       assertTrue(tx.isCommitted());
     }
@@ -107,7 +118,7 @@ class ExchangeTest {
     void buyReducesBalance() {
       Player player = new Player("Buyer", BigDecimal.valueOf(1000));
       BigDecimal before = player.getMoney();
-      exchange.buy("AAA", BigDecimal.ONE, player);
+      exchangeService.buy("AAA", BigDecimal.ONE, player);
       assertTrue(player.getMoney().compareTo(before) < 0);
     }
 
@@ -115,7 +126,7 @@ class ExchangeTest {
     @DisplayName("share appears in player portfolio after buy")
     void buyAddsShareToPortfolio() {
       Player player = new Player("Buyer", BigDecimal.valueOf(1000));
-      exchange.buy("AAA", BigDecimal.ONE, player);
+      exchangeService.buy("AAA", BigDecimal.ONE, player);
       assertFalse(player.getPortfolio().getShares().isEmpty());
     }
 
@@ -124,7 +135,7 @@ class ExchangeTest {
     void buyUnknownSymbol() {
       Player player = new Player("Buyer", BigDecimal.valueOf(1000));
       assertThrows(IllegalArgumentException.class,
-        () -> exchange.buy("ZZZ", BigDecimal.ONE, player));
+          () -> exchangeService.buy("ZZZ", BigDecimal.ONE, player));
     }
 
     @Test
@@ -132,7 +143,7 @@ class ExchangeTest {
     void buyInsufficientFunds() {
       Player player = new Player("Broke", BigDecimal.valueOf(0));
       assertThrows(IllegalArgumentException.class,
-        () -> exchange.buy("AAA", BigDecimal.valueOf(100), player));
+          () -> exchangeService.buy("AAA", BigDecimal.valueOf(100), player));
     }
   }
 
@@ -147,7 +158,7 @@ class ExchangeTest {
       Stock stock = exchange.getStock("AAA");
       Share share = new Share(stock, BigDecimal.ONE, stock.getSalesPrice());
       player.getPortfolio().addShare(share);
-      Transaction tx = exchange.sell("AAA", BigDecimal.ONE, player);
+      Transaction tx = exchangeService.sell("AAA", BigDecimal.ONE, player);
       assertInstanceOf(Sale.class, tx);
       assertTrue(tx.isCommitted());
     }
@@ -160,7 +171,7 @@ class ExchangeTest {
       Share share = new Share(stock, BigDecimal.ONE, stock.getSalesPrice());
       player.getPortfolio().addShare(share);
       BigDecimal before = player.getMoney();
-      exchange.sell("AAA", BigDecimal.ONE, player);
+      exchangeService.sell("AAA", BigDecimal.ONE, player);
       assertTrue(player.getMoney().compareTo(before) > 0);
     }
 
@@ -169,7 +180,7 @@ class ExchangeTest {
     void sellUnknownSymbol() {
       Player player = new Player("Seller", BigDecimal.valueOf(1000));
       assertThrows(IllegalArgumentException.class,
-        () -> exchange.sell("ZZZ", BigDecimal.ONE, player));
+          () -> exchangeService.sell("ZZZ", BigDecimal.ONE, player));
     }
 
     @Test
@@ -177,7 +188,7 @@ class ExchangeTest {
     void sellWithoutOwnership() {
       Player player = new Player("Seller", BigDecimal.valueOf(1000));
       assertThrows(IllegalArgumentException.class,
-        () -> exchange.sell("AAA", BigDecimal.ONE, player));
+          () -> exchangeService.sell("AAA", BigDecimal.ONE, player));
     }
   }
 
@@ -194,16 +205,14 @@ class ExchangeTest {
     @Test
     @DisplayName("advance increments week by one")
     void advanceIncrementsWeek() {
-      exchange.advance();
+      exchangeService.advance();
       assertEquals(2, exchange.getWeek());
     }
 
     @Test
-    @DisplayName("advance changes all stock prices")
+    @DisplayName("advance adds a new price to all stock price histories")
     void advanceChangesPrices() {
-      BigDecimal priceBefore = exchange.getStock("AAA").getSalesPrice();
-      exchange.advance();
-      // The new price is recorded in the price history (size grows)
+      exchangeService.advance();
       assertTrue(exchange.getStock("AAA").getHistoricalPrices().size() > 1);
     }
   }
