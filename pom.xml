@@ -81,7 +81,6 @@
 
     </dependencies>
 
-    <!-- ===== BUILD PLUGINS ===== -->
     <build>
         <plugins>
 
@@ -91,7 +90,6 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>${javafx.plugin.version}</version>
                 <configuration>
-                    <!-- Update this to your actual main class once it exists -->
                     <mainClass>org.example.Main</mainClass>
                 </configuration>
             </plugin>
@@ -113,6 +111,12 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.plugin.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>org/example/view/**</exclude>
+                        <exclude>org/example/Main.class</exclude>
+                    </excludes>
+                </configuration>
                 <executions>
 
                     <!-- 1. Attach the JaCoCo agent before tests run -->
