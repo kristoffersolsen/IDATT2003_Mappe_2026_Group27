@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 /**
  * Interface for purchase and sale calculators
  */
-interface TransactionCalculator {
+public interface TransactionCalculator {
   BigDecimal calculateGross();
 
   BigDecimal calculateCommision();

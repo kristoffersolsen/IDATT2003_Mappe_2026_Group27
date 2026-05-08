@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Random;
 import org.example.model.Exchange;
 import org.example.model.Player;
+import org.example.model.Portfolio;
 import org.example.model.Share;
 import org.example.model.Stock;
 import org.example.model.StockFileRecord;
@@ -55,8 +56,6 @@ public class ExchangeService {
 
   /**
    * Returns the underlying {@link Exchange} model.
-   *
-   * <p>Controllers and views should observe this object for state changes.
    *
    * @return the exchange model
    */
@@ -126,19 +125,42 @@ public class ExchangeService {
   }
 
   /**
-   * Executes a sale of the given stock for the given player.
+   * Executes a partial or full sale of a stock position for the given player.
    *
-   * @param symbol   stock symbol
-   * @param quantity shares to sell
-   * @param player   the selling player
+   * <p>The share used is retrieved from the player's portfolio so the stored
+   * quantity and weighted-average purchase price are correct. A new
+   * {@link Share} is constructed with {@code quantityToSell} for the
+   * transaction, and {@link Portfolio#removeShare(Share, BigDecimal)} is
+   * called to reduce (or remove) the position accordingly.
+   *
+   * @param symbol         stock symbol
+   * @param quantityToSell number of shares to sell (1 .. held quantity)
+   * @param player         the selling player
    * @return the committed transaction
-   * @throws IllegalArgumentException if symbol unknown or player does not own the share
+   * @throws IllegalArgumentException if symbol unknown, player does not own the
+   *                                  share, or quantityToSell exceeds held quantity
    */
-  public Transaction sell(String symbol, BigDecimal quantity, Player player) {
-    Stock stock = exchange.getStock(symbol);
-    Share share = new Share(stock, quantity, stock.getSalesPrice());
-    Transaction transaction = TransactionFactory.createSale(share, exchange.getWeek());
-    transaction.commit(player);
+  public Transaction sell(String symbol, BigDecimal quantityToSell, Player player) {
+    if (!exchange.hasStock(symbol)) {
+      throw new IllegalArgumentException("Stock with symbol " + symbol + " does not exist.");
+    }
+
+    Portfolio portfolio = player.getPortfolio();
+    Share heldShare = portfolio.getShareBySymbol(symbol)
+        .orElseThrow(() -> new IllegalArgumentException(
+            "Player does not have this share in their portfolio."));
+
+    // Build a share for exactly the quantity being sold, at the held avg price
+    Share shareToSell = new Share(heldShare.stock(), quantityToSell, heldShare.purchasePrice());
+
+    Transaction transaction = TransactionFactory.createSale(shareToSell, exchange.getWeek());
+
+    // Manually commit: bypass Sale.commit()'s contains() check since shareToSell
+    // is a new object. We own the pre-flight checks here in the service.
+    player.addMoney(transaction.getCalculator().calculateTotal());
+    portfolio.removeShare(heldShare, quantityToSell);
+    player.getTransactionArchive().add(transaction);
+
     exchange.notifyObservers(GameEvent.STOCK_SOLD);
     return transaction;
   }

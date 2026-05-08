@@ -1,5 +1,7 @@
 package org.example.controller;
 
+import java.math.BigDecimal;
+import org.example.model.Share;
 import org.example.model.Stock;
 import org.example.model.observer.GameEvent;
 import org.example.model.observer.GameObserver;
@@ -7,12 +9,17 @@ import org.example.model.Player;
 import org.example.service.ExchangeService;
 import org.example.util.Format;
 import org.example.view.DashboardView;
+import org.example.view.PortfolioPanel;
+import org.example.view.StockDetailView;
+import org.example.view.TransactionsPanel;
 
 /**
  * Controller for the main dashboard.
  *
  * <p>Holds an {@link ExchangeService} for operations and observes the
  * underlying {@link org.example.model.Exchange} model for state changes.
+ * Delegates center-panel logic to {@link StockDetailController} and
+ * side-panel logic to {@link MarketController}.
  */
 public class DashboardController implements GameObserver {
 
@@ -20,7 +27,12 @@ public class DashboardController implements GameObserver {
   private final Player player;
   private final ExchangeService exchangeService;
   private final AppController appController;
+
   private final MarketController marketController;
+  private final StockDetailController stockDetailController;
+
+  private final PortfolioPanel portfolioPanel;
+  private final TransactionsPanel transactionsPanel;
 
   private boolean rightPanelVisible = false;
   private String currentRightPanel = "";
@@ -43,7 +55,14 @@ public class DashboardController implements GameObserver {
     this.exchangeService = exchangeService;
     this.appController = appController;
 
-    // Observe the model objects, not the service
+    this.portfolioPanel = new PortfolioPanel(this::onSellShare);
+    this.transactionsPanel = new TransactionsPanel();
+
+    StockDetailView stockDetailView = new StockDetailView();
+    view.setCenterPanel(stockDetailView);
+    this.stockDetailController = new StockDetailController(
+        stockDetailView, exchangeService, player);
+
     exchangeService.getExchange().addObserver(this);
     player.addObserver(this);
 
@@ -58,6 +77,10 @@ public class DashboardController implements GameObserver {
     wirePortfolioButton();
     wireTransactionsButton();
 
+    exchangeService.getExchange().getStocks().stream()
+        .findFirst()
+        .ifPresent(this::onStockSelected);
+
     refresh();
   }
 
@@ -66,16 +89,34 @@ public class DashboardController implements GameObserver {
     switch (event) {
       case WEEK_ADVANCED -> {
         marketController.refresh();
+        stockDetailController.refresh();
         refresh();
       }
-      case STOCK_PURCHASED, STOCK_SOLD, BALANCE_CHANGED, PORTFOLIO_CHANGED -> refresh();
-      default -> { }
+      case STOCK_PURCHASED, STOCK_SOLD, BALANCE_CHANGED, PORTFOLIO_CHANGED -> {
+        stockDetailController.refresh();
+        refresh();
+      }
+      default -> {
+      }
     }
   }
 
   private void onStockSelected(Stock stock) {
-    // TODO: pass to StockDetailController once implemented
-    System.out.println("Selected: " + stock.getSymbol());
+    stockDetailController.showStock(stock);
+  }
+
+  /**
+   * Forwards a partial or full sell from the portfolio modal to the service.
+   *
+   * @param share          the position being sold
+   * @param quantityToSell the quantity chosen in the modal
+   */
+  private void onSellShare(Share share, BigDecimal quantityToSell) {
+    try {
+      exchangeService.sell(share.stock().getSymbol(), quantityToSell, player);
+    } catch (IllegalArgumentException e) {
+      System.err.println("Sell failed: " + e.getMessage());
+    }
   }
 
   private void wireAdvanceButton() {
@@ -101,25 +142,11 @@ public class DashboardController implements GameObserver {
       rightPanelVisible = false;
       currentRightPanel = "";
     } else {
-      view.setRightPanel(buildPlaceholderPanel(panelName));
+      view.setRightPanel(
+          panelName.equals("portfolio") ? portfolioPanel : transactionsPanel);
       rightPanelVisible = true;
       currentRightPanel = panelName;
     }
-  }
-
-  private javafx.scene.layout.VBox buildPlaceholderPanel(String panelName) {
-    javafx.scene.control.Label title = new javafx.scene.control.Label(
-        panelName.equals("portfolio") ? "Portfolio" : "Recent Transactions");
-    title.getStyleClass().add("font-title");
-
-    javafx.scene.control.Label body = new javafx.scene.control.Label("Content coming soon.");
-    body.getStyleClass().add("font-content");
-
-    javafx.scene.layout.VBox panel = new javafx.scene.layout.VBox(16, title, body);
-    panel.setPadding(new javafx.geometry.Insets(20));
-    panel.setPrefWidth(300);
-    panel.getStyleClass().add("content-white");
-    return panel;
   }
 
   private void refresh() {
@@ -130,5 +157,9 @@ public class DashboardController implements GameObserver {
         Format.formatMoney(player.getNetWorth()),
         Format.formatMoney(player.getMoney()),
         Format.formatMoney(player.getPortfolio().getNetWorth()));
+
+    portfolioPanel.setShares(player.getPortfolio().getShares());
+    transactionsPanel.setTransactions(
+        player.getTransactionArchive().getTransactions());
   }
 }
