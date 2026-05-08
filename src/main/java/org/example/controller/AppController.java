@@ -14,6 +14,7 @@ import org.example.view.StartView;
 public class AppController {
 
   private final Stage stage;
+  private DashboardController dashboardController;
 
   /**
    * Constructor. Shows the start screen immediately.
@@ -29,6 +30,7 @@ public class AppController {
    * Shows the start screen.
    */
   public void showStartScreen() {
+    disposeDashboard();
     StartView startView = new StartView();
     new StartController(startView, stage, this);
     stage.getScene().setRoot(startView.getRoot());
@@ -42,8 +44,9 @@ public class AppController {
    * @param exchangeService the active exchange service
    */
   public void startGame(Player player, ExchangeService exchangeService) {
+    disposeDashboard();
     DashboardView dashboardView = new DashboardView();
-    new DashboardController(dashboardView, player, exchangeService, this);
+    dashboardController = new DashboardController(dashboardView, player, exchangeService, this);
     stage.getScene().setRoot(dashboardView.getRoot());
   }
 
@@ -54,16 +57,24 @@ public class AppController {
    * @param exchangeService the exchange service at game end
    */
   public void showEndScreen(Player player, ExchangeService exchangeService) {
+    disposeDashboard();
     EndView endView = new EndView();
     new EndController(endView, this);
 
     endView.populate(
         player.getName(),
-        Format.formatMoney(player.getNetWorth()),
+        Format.formatMoney(player.getStartingMoney()),
         Format.formatMoney(player.getNetWorth()),
         player.getStatus(exchangeService.getExchange().getWeek()).getStatus());
 
     stage.getScene().setRoot(endView.getRoot());
     stage.setTitle("Millions — Game Over");
+  }
+
+  private void disposeDashboard() {
+    if (dashboardController != null) {
+      dashboardController.dispose();
+      dashboardController = null;
+    }
   }
 }

@@ -9,9 +9,12 @@ import org.example.model.Player;
 import org.example.service.ExchangeService;
 import org.example.util.Format;
 import org.example.view.DashboardView;
+import org.example.view.ErrorDialog;
 import org.example.view.PortfolioPanel;
 import org.example.view.StockDetailView;
 import org.example.view.TransactionsPanel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Controller for the main dashboard.
@@ -22,6 +25,10 @@ import org.example.view.TransactionsPanel;
  * side-panel logic to {@link MarketController}.
  */
 public class DashboardController implements GameObserver {
+
+  private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
+
+  private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS }
 
   private final DashboardView view;
   private final Player player;
@@ -34,8 +41,7 @@ public class DashboardController implements GameObserver {
   private final PortfolioPanel portfolioPanel;
   private final TransactionsPanel transactionsPanel;
 
-  private boolean rightPanelVisible = false;
-  private String currentRightPanel = "";
+  private RightPanel currentRightPanel = RightPanel.NONE;
 
   /**
    * Creates the controller, registers as observer, and performs initial refresh.
@@ -101,6 +107,17 @@ public class DashboardController implements GameObserver {
     }
   }
 
+  /**
+   * Unregisters this controller from all observable sources.
+   *
+   * <p>Called by {@link AppController} before swapping to a different
+   * screen so observer lists don't accumulate stale references.
+   */
+  public void dispose() {
+    exchangeService.getExchange().removeObserver(this);
+    player.removeObserver(this);
+  }
+
   private void onStockSelected(Stock stock) {
     stockDetailController.showStock(stock);
   }
@@ -115,7 +132,8 @@ public class DashboardController implements GameObserver {
     try {
       exchangeService.sell(share.stock().getSymbol(), quantityToSell, player);
     } catch (IllegalArgumentException e) {
-      System.err.println("Sell failed: " + e.getMessage());
+      log.error("Sell failed", e);
+      ErrorDialog.show("Sell failed", e.getMessage());
     }
   }
 
@@ -129,23 +147,20 @@ public class DashboardController implements GameObserver {
   }
 
   private void wirePortfolioButton() {
-    view.getPortfolioButton().setOnAction(e -> toggleRightPanel("portfolio"));
+    view.getPortfolioButton().setOnAction(e -> toggleRightPanel(RightPanel.PORTFOLIO));
   }
 
   private void wireTransactionsButton() {
-    view.getTransactionsButton().setOnAction(e -> toggleRightPanel("transactions"));
+    view.getTransactionsButton().setOnAction(e -> toggleRightPanel(RightPanel.TRANSACTIONS));
   }
 
-  private void toggleRightPanel(String panelName) {
-    if (rightPanelVisible && currentRightPanel.equals(panelName)) {
+  private void toggleRightPanel(RightPanel panel) {
+    if (currentRightPanel == panel) {
       view.setRightPanel(null);
-      rightPanelVisible = false;
-      currentRightPanel = "";
+      currentRightPanel = RightPanel.NONE;
     } else {
-      view.setRightPanel(
-          panelName.equals("portfolio") ? portfolioPanel : transactionsPanel);
-      rightPanelVisible = true;
-      currentRightPanel = panelName;
+      view.setRightPanel(panel == RightPanel.PORTFOLIO ? portfolioPanel : transactionsPanel);
+      currentRightPanel = panel;
     }
   }
 

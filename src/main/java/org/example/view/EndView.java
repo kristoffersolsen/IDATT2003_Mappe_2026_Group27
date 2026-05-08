@@ -6,8 +6,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 /**
@@ -33,7 +31,7 @@ public class EndView {
    */
   public EndView() {
     Label title = new Label("Millions");
-    title.setStyle("-fx-font-size: 64px;");
+    title.getStyleClass().add("end-title");
 
     GridPane summary = buildSummaryGrid();
 
@@ -47,18 +45,9 @@ public class EndView {
     card.setAlignment(Pos.CENTER);
     card.setPadding(new Insets(40));
     card.setMaxWidth(440);
-    card.setStyle(
-        "-fx-background-color: #d9d9d9;"
-            + "-fx-background-radius: 8px;");
+    card.getStyleClass().add("screen-card");
 
-    Region topSpacer = new Region();
-    Region bottomSpacer = new Region();
-    VBox.setVgrow(topSpacer, Priority.ALWAYS);
-    VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
-
-    root = new VBox(topSpacer, title, card, bottomSpacer);
-    root.setAlignment(Pos.CENTER);
-    root.setStyle("-fx-background-color: white;");
+    root = CenteredCardLayout.build(title, card);
   }
 
   /**
@@ -100,9 +89,7 @@ public class EndView {
   private void styleValueLabel(Label label) {
     label.setPrefWidth(180);
     label.setPadding(new Insets(4, 8, 4, 8));
-    label.setStyle(
-        "-fx-background-color: white;"
-            + "-fx-background-radius: 4px;");
+    label.getStyleClass().add("summary-value-label");
   }
 
   /**

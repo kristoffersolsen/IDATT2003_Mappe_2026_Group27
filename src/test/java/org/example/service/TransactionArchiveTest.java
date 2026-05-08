@@ -1,11 +1,11 @@
 package org.example.service;
 
-import org.example.model.Player;
 import org.example.model.Share;
 import org.example.model.Stock;
 import org.example.model.transaction.Purchase;
 import org.example.model.transaction.Sale;
 import org.example.model.transaction.Transaction;
+import org.example.model.transaction.TransactionArchive;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

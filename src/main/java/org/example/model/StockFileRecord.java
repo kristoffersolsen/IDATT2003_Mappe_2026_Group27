@@ -1,9 +1,6 @@
 package org.example.model;
 
 import java.io.File;
-import org.example.service.StockFileService;
-
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -11,16 +8,16 @@ import java.util.List;
  */
 public class StockFileRecord {
 
-  List<Stock> stocks;
-  File fileName;
-  String description;
-  int week;
+  private List<Stock> stocks;
+  private final File fileName;
+  private final String description;
+  private final int week;
 
   /**
-   * Default constructor with only list of stocks and filename.
+   * Constructor with only list of stocks and filename.
    *
    * @param stocks   stocks to read/write
-   * @param fileName the filename
+   * @param fileName the file
    */
   public StockFileRecord(List<Stock> stocks, File fileName) {
     this.stocks = stocks;
@@ -32,8 +29,8 @@ public class StockFileRecord {
   /**
    * Constructor with description.
    *
-   * @param stocks      Stocks to read/write
-   * @param fileName    Filename
+   * @param stocks      stocks to read/write
+   * @param fileName    file
    * @param description description
    */
   public StockFileRecord(List<Stock> stocks, File fileName, String description) {
@@ -47,9 +44,9 @@ public class StockFileRecord {
    * Constructor with description and week number.
    *
    * @param stocks      stocks to read/write
-   * @param fileName    filename
+   * @param fileName    file
    * @param description description
-   * @param week        weeknumber
+   * @param week        week number
    */
   public StockFileRecord(List<Stock> stocks, File fileName, String description, int week) {
     this.stocks = stocks;
@@ -76,16 +73,5 @@ public class StockFileRecord {
 
   public void setStocks(List<Stock> stocks) {
     this.stocks = stocks;
-  }
-
-  /**
-   * Writes the current record to its file.
-   */
-  public void writeToFile() {
-    try {
-      StockFileService.writeStocks(this);
-    } catch (IOException e) {
-      System.err.println("Error writing stockFileRecord to file: " + e.getMessage());
-    }
   }
 }

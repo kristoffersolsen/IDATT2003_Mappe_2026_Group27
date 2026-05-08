@@ -3,12 +3,12 @@ package org.example.model.transaction;
 import java.math.BigDecimal;
 
 /**
- * Interface for purchase and sale calculators
+ * Interface for purchase and sale calculators.
  */
 public interface TransactionCalculator {
   BigDecimal calculateGross();
 
-  BigDecimal calculateCommision();
+  BigDecimal calculateCommission();
 
   BigDecimal calculateTax();
 

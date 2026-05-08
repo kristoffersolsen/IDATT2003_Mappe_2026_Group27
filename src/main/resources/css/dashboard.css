@@ -1,0 +1,62 @@
+/* ---- Market sidebar ---- */
+.market-search {
+    -fx-background-color: #555555;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #aaaaaa;
+    -fx-background-radius: 4px;
+    -fx-border-width: 0;
+}
+.market-list { -fx-background-color: transparent; -fx-border-width: 0; }
+.market-list .list-cell { -fx-background-color: transparent; -fx-padding: 0; }
+.market-list .list-cell:hover    { -fx-background-color: #4a4a4a; -fx-background-radius: 4px; }
+.market-list .list-cell:selected { -fx-background-color: #555555; -fx-background-radius: 4px; }
+
+.toggle-filter {
+    -fx-background-color: #555555;
+    -fx-text-fill: white;
+    -fx-background-radius: 12px;
+    -fx-font-size: 12px;
+    -fx-padding: 3 10 3 10;
+    -fx-border-width: 0;
+}
+.toggle-filter:selected          { -fx-background-color: white; -fx-text-fill: #1e1e1e; }
+.toggle-filter:hover:!selected   { -fx-background-color: #666666; }
+
+/* ---- Stock detail ---- */
+.stat-button {
+    -fx-background-color: #c8c8c8;
+    -fx-text-fill: #222222;
+    -fx-font-size: 11px;
+    -fx-padding: 6 12 6 12;
+    -fx-background-radius: 4px;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+.stat-button:hover { -fx-background-color: #b0b0b0; }
+
+.stock-header {
+    -fx-background-color: #d9d9d9;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 0 0 1 0;
+}
+.stock-price-label { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #222222; }
+
+.stock-chart { -fx-background-color: transparent; }
+.stock-chart .chart-plot-background   { -fx-background-color: #e0e0e0; }
+.stock-chart .chart-series-line       { -fx-stroke: #1976d2; -fx-stroke-width: 2px; }
+.stock-chart .chart-line-symbol       { -fx-background-color: #1976d2, white; -fx-background-radius: 4px; -fx-padding: 4px; }
+.stock-chart .axis                    { -fx-tick-label-fill: #555555; }
+.stock-chart .axis-label              { -fx-text-fill: #555555; }
+.stock-chart .chart-vertical-grid-lines   { -fx-stroke: #cccccc; }
+.stock-chart .chart-horizontal-grid-lines { -fx-stroke: #cccccc; }
+
+.buy-form {
+    -fx-background-color: #e0e0e0;
+    -fx-background-radius: 6px;
+}
+.tx-panel {
+    -fx-background-color: #d9d9d9;
+    -fx-background-radius: 6px;
+}
+.bottom-section { -fx-background-color: #e8e8e8; }
+

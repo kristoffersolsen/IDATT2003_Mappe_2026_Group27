@@ -3,6 +3,8 @@ package org.example.model;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import org.example.model.transaction.SaleCalculator;
 
@@ -25,10 +27,11 @@ public class Portfolio {
    *
    * <p>If a position for the same stock already exists the quantities are
    * merged into a single {@link Share} with a weighted-average purchase price,
-   * keeping one row per stock. A new position is created when none exists.
+   * keeping one row per stock in its original list position. A new position is
+   * created when none exists.
    *
    * @param share share to add
-   * @return true always
+   * @return true if a new position was created, false if an existing position was merged
    */
   public boolean addShare(Share share) {
     Optional<Share> existing = findBySymbol(share.stock().getSymbol());
@@ -42,12 +45,12 @@ public class Portfolio {
       BigDecimal avgPrice = oldCost.add(newCost)
           .divide(newQty, 10, RoundingMode.HALF_UP);
 
-      shares.remove(old);
-      shares.add(new Share(share.stock(), newQty, avgPrice));
+      shares.set(shares.indexOf(old), new Share(share.stock(), newQty, avgPrice));
+      return false;
     } else {
       shares.add(share);
+      return true;
     }
-    return true;
   }
 
   /**
@@ -60,7 +63,7 @@ public class Portfolio {
    * @param share          share whose stock should be partially or fully sold
    * @param quantityToSell the number of shares being sold (must be positive)
    * @return true if the position existed and was updated, false if not found
-   * @throws IllegalArgumentException if quantityToSell exceeds the held quantity
+   * @throws IllegalArgumentException if {@code quantityToSell} exceeds the held quantity
    */
   public boolean removeShare(Share share, BigDecimal quantityToSell) {
     Optional<Share> match = findBySymbol(share.stock().getSymbol());
@@ -122,18 +125,13 @@ public class Portfolio {
     return findBySymbol(symbol);
   }
 
-  public ArrayList<Share> getShares() {
-    return shares;
-  }
-
-  ArrayList<Share> getShares(String symbol) {
-    ArrayList<Share> returnList = new ArrayList<>();
-    for (Share share : shares) {
-      if (share.stock().getSymbol().equals(symbol)) {
-        returnList.add(share);
-      }
-    }
-    return returnList;
+  /**
+   * Returns an unmodifiable view of all current positions.
+   *
+   * @return live unmodifiable view of shares
+   */
+  public List<Share> getShares() {
+    return Collections.unmodifiableList(shares);
   }
 
   /**

@@ -42,11 +42,19 @@ public abstract class Transaction {
   }
 
   /**
-   * Checks that transaction is valid and commits it.
+   * Checks that the transaction is valid and commits it.
    *
-   * @param player The player to perform a transaction on
+   * @param player the player to perform a transaction on
    */
-  public void commit(Player player) {
+  public abstract void commit(Player player);
 
+  /**
+   * Marks this transaction as committed.
+   *
+   * <p>Called by {@link org.example.service.ExchangeService} when it manually
+   * applies the transaction side-effects instead of delegating to {@link #commit}.
+   */
+  public void markCommitted() {
+    this.committed = true;
   }
 }

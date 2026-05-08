@@ -33,7 +33,7 @@ class ExchangeServiceTest {
     // stockC stays at 100 — change = 0
 
     exchange = new Exchange("Test Exchange", 1, List.of(stockA, stockB, stockC));
-    exchangeService = new ExchangeService(exchange);
+    exchangeService = ExchangeService.forTesting(exchange);
   }
 
   @Nested
@@ -54,7 +54,7 @@ class ExchangeServiceTest {
       stockD.addNewSalesPrice(BigDecimal.valueOf(150));
       Exchange bigExchange = new Exchange("Big", 1,
           List.of(stockA, stockB, stockC, stockD));
-      ExchangeService bigService = new ExchangeService(bigExchange);
+      ExchangeService bigService = ExchangeService.forTesting(bigExchange);
 
       List<Stock> gainers = bigService.getGainers(1);
       assertEquals(1, gainers.size());
@@ -64,7 +64,7 @@ class ExchangeServiceTest {
     @DisplayName("returns empty list when no stocks have gained")
     void emptyWhenNoGainers() {
       Exchange loserExchange = new Exchange("Losers", 1, List.of(stockB, stockC));
-      ExchangeService loserService = new ExchangeService(loserExchange);
+      ExchangeService loserService = ExchangeService.forTesting(loserExchange);
       assertTrue(loserService.getGainers(10).isEmpty());
     }
 
@@ -74,7 +74,7 @@ class ExchangeServiceTest {
       Stock bigGainer = new Stock("BIG", "Big Gainer", BigDecimal.valueOf(100));
       bigGainer.addNewSalesPrice(BigDecimal.valueOf(200)); // +100
       Exchange sortExchange = new Exchange("Sort", 1, List.of(stockA, bigGainer));
-      ExchangeService sortService = new ExchangeService(sortExchange);
+      ExchangeService sortService = ExchangeService.forTesting(sortExchange);
 
       List<Stock> gainers = sortService.getGainers(10);
       assertTrue(gainers.get(0).getLatestPriceChange()
@@ -100,7 +100,7 @@ class ExchangeServiceTest {
       stockE.addNewSalesPrice(BigDecimal.valueOf(50));
       Exchange bigExchange = new Exchange("Big", 1,
           List.of(stockA, stockB, stockC, stockE));
-      ExchangeService bigService = new ExchangeService(bigExchange);
+      ExchangeService bigService = ExchangeService.forTesting(bigExchange);
 
       List<Stock> losers = bigService.getLosers(1);
       assertEquals(1, losers.size());
@@ -110,7 +110,7 @@ class ExchangeServiceTest {
     @DisplayName("returns empty list when no stocks have lost")
     void emptyWhenNoLosers() {
       Exchange gainerExchange = new Exchange("Gainers", 1, List.of(stockA, stockC));
-      ExchangeService gainerService = new ExchangeService(gainerExchange);
+      ExchangeService gainerService = ExchangeService.forTesting(gainerExchange);
       assertTrue(gainerService.getLosers(10).isEmpty());
     }
 
@@ -120,7 +120,7 @@ class ExchangeServiceTest {
       Stock bigLoser = new Stock("BIG", "Big Loser", BigDecimal.valueOf(100));
       bigLoser.addNewSalesPrice(BigDecimal.valueOf(10)); // -90
       Exchange sortExchange = new Exchange("Sort", 1, List.of(stockB, bigLoser));
-      ExchangeService sortService = new ExchangeService(sortExchange);
+      ExchangeService sortService = ExchangeService.forTesting(sortExchange);
 
       List<Stock> losers = sortService.getLosers(10);
       assertTrue(losers.get(0).getLatestPriceChange()

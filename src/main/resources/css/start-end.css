@@ -1,0 +1,17 @@
+/* ---- Shared card/root layout ---- */
+.screen-root { -fx-background-color: white; }
+.screen-card {
+    -fx-background-color: #d9d9d9;
+    -fx-background-radius: 8px;
+}
+
+/* ---- Start screen ---- */
+.start-title { -fx-font-size: 96px; }
+.start-error { -fx-text-fill: red; -fx-font-size: 13px; }
+
+/* ---- End screen ---- */
+.end-title { -fx-font-size: 64px; }
+.summary-value-label {
+    -fx-background-color: white;
+    -fx-background-radius: 4px;
+}

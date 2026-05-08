@@ -1,16 +1,14 @@
-package org.example.service;
-
-import org.example.model.transaction.Purchase;
-import org.example.model.transaction.Sale;
-import org.example.model.transaction.Transaction;
+package org.example.model.transaction;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Keeps an archive of transactions
+ * Keeps an archive of all committed transactions for a player.
  */
 public class TransactionArchive {
+
   private final List<Transaction> transactions;
 
   /**
@@ -33,18 +31,22 @@ public class TransactionArchive {
     return transactions.isEmpty();
   }
 
+  /**
+   * Returns an unmodifiable view of all transactions in the archive.
+   *
+   * @return live unmodifiable view
+   */
   public List<Transaction> getTransactions() {
-    return transactions;
+    return Collections.unmodifiableList(transactions);
   }
 
   /**
    * Retrieves all purchases in the archive.
    *
-   * @return List of Purchases
+   * @return list of purchases
    */
   public List<Purchase> getPurchases() {
     List<Purchase> purchases = new ArrayList<>();
-
     for (Transaction transaction : transactions) {
       if (transaction instanceof Purchase) {
         purchases.add((Purchase) transaction);
@@ -54,13 +56,12 @@ public class TransactionArchive {
   }
 
   /**
-   * Retrives all sales in the archive.
+   * Retrieves all sales in the archive.
    *
-   * @return List of Sales
+   * @return list of sales
    */
   public List<Sale> getSales() {
     List<Sale> sales = new ArrayList<>();
-
     for (Transaction transaction : transactions) {
       if (transaction instanceof Sale) {
         sales.add((Sale) transaction);
@@ -72,18 +73,12 @@ public class TransactionArchive {
   /**
    * Counts how many distinct weeks the archive spans.
    *
-   * @return number of weeks
+   * @return number of distinct weeks
    */
   public int countDistinctWeeks() {
-    int weeks = 0;
-    List<Integer> distinctWeeks = new ArrayList<>();
-
-    for (Transaction transaction : transactions) {
-      if (!distinctWeeks.contains(transaction.getWeek())) {
-        distinctWeeks.add(transaction.getWeek());
-        weeks++;
-      }
-    }
-    return weeks;
+    return (int) transactions.stream()
+        .map(Transaction::getWeek)
+        .distinct()
+        .count();
   }
 }

@@ -1,0 +1,38 @@
+/* ---- Portfolio rows ---- */
+.portfolio-card {
+    -fx-background-color: #3c3c3c;
+    -fx-background-radius: 6px;
+}
+.pnl-badge-positive {
+    -fx-background-color: #1b5e20;
+    -fx-text-fill: #a5d6a7;
+    -fx-font-size: 11px;
+    -fx-padding: 2 7 2 7;
+    -fx-background-radius: 99px;
+}
+.pnl-badge-negative {
+    -fx-background-color: #7f0000;
+    -fx-text-fill: #ef9a9a;
+    -fx-font-size: 11px;
+    -fx-padding: 2 7 2 7;
+    -fx-background-radius: 99px;
+}
+
+/* ---- Sell modal ---- */
+.sell-modal-card {
+    -fx-background-color: #1e1e1e;
+    -fx-background-radius: 8px;
+    -fx-border-color: #555555;
+    -fx-border-width: 1px;
+    -fx-border-radius: 8px;
+}
+.modal-overlay { -fx-background-color: rgba(0, 0, 0, 0.6); }
+.modal-info-panel {
+    -fx-background-color: #2a2a2a;
+    -fx-background-radius: 6px;
+}
+.modal-divider { -fx-background-color: #444444; }
+.net-label { -fx-font-weight: bold; }
+
+.pnl-positive { -fx-font-size: 11px; -fx-text-fill: #81c784; }
+.pnl-negative { -fx-font-size: 11px; -fx-text-fill: #e57373; }

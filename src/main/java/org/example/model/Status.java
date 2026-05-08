@@ -1,35 +1,58 @@
 package org.example.model;
 
+import java.math.BigDecimal;
+
 /**
- * Enums for player status depending on time trading and growth of net worth.
+ * Player status tiers based on weeks played and net-worth growth.
+ *
+ * <p>Each constant carries the thresholds required to qualify for that tier,
+ * which are used by both {@link Player#getStatus} and {@link #explainStatus}.
  */
 public enum Status {
-  NOVICE("Novice"),
-  INVESTOR("Investor"),
-  SPECULATOR("Speculator");
+  NOVICE("Novice", 0, BigDecimal.ONE),
+  INVESTOR("Investor", 10, new BigDecimal("1.2")),
+  SPECULATOR("Speculator", 20, new BigDecimal("2.0"));
 
-  final String status;
+  private final String label;
+  private final int requiredWeeks;
+  private final BigDecimal requiredGrowth;
 
-
-  Status(String status) {
-    this.status = status;
+  Status(String label, int requiredWeeks, BigDecimal requiredGrowth) {
+    this.label = label;
+    this.requiredWeeks = requiredWeeks;
+    this.requiredGrowth = requiredGrowth;
   }
 
   public String getStatus() {
-    return status;
+    return label;
   }
 
   /**
-   * Returns an explanation of the current status.
+   * Returns whether the given week and net worth satisfy this tier's requirements.
    *
-   * @return String of explanation.
+   * @param week          current game week
+   * @param startingMoney player's starting money
+   * @param netWorth      player's current net worth
+   * @return true if requirements are met
    */
-  public String explainStatus() {
-    return switch (this) {
-      case SPECULATOR -> "Speculator: Requires 20 weeks of trading and a doubling of net worth";
-      case INVESTOR -> "Investor: Requires 10 weeks of trading and 20% growth of net worth";
-      default -> "Novice: No requirements";
-    };
+  public boolean qualifies(int week, BigDecimal startingMoney, BigDecimal netWorth) {
+    return week >= requiredWeeks
+        && netWorth.compareTo(startingMoney.multiply(requiredGrowth)) >= 0;
   }
 
+  /**
+   * Returns a human-readable description of the requirements for this status.
+   *
+   * @return explanation string
+   */
+  public String explainStatus() {
+    if (this == NOVICE) {
+      return label + ": No requirements";
+    }
+    BigDecimal pct = requiredGrowth.subtract(BigDecimal.ONE)
+        .multiply(BigDecimal.valueOf(100))
+        .stripTrailingZeros();
+    return label + ": Requires " + requiredWeeks
+        + " weeks of trading and " + pct.toPlainString() + "% growth of net worth";
+  }
 }

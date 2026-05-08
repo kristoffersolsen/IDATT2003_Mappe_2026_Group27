@@ -1,13 +1,28 @@
 package org.example.model.transaction;
 
+import java.math.BigDecimal;
 import org.example.model.Share;
 
-import java.math.BigDecimal;
-
 /**
- * Calculators for when a share is sold
+ * Calculator for when a share is sold.
+ *
+ * <p>Formulas:
+ * <ul>
+ *   <li>gross = salesPrice × quantity</li>
+ *   <li>commission = gross × {@link #COMMISSION_RATE}</li>
+ *   <li>gain = gross − costBasis − commission</li>
+ *   <li>tax = gain &gt; 0 ? gain × {@link #TAX_RATE} : 0</li>
+ *   <li>total = gross − commission − tax</li>
+ * </ul>
  */
 public class SaleCalculator implements TransactionCalculator {
+
+  /** Commission charged on sales: 1% of gross. */
+  public static final BigDecimal COMMISSION_RATE = new BigDecimal("0.01");
+
+  /** Capital-gains tax rate applied to realized gains: 22%. */
+  public static final BigDecimal TAX_RATE = new BigDecimal("0.22");
+
   private final BigDecimal purchasePrice;
   private final BigDecimal salesPrice;
   private final BigDecimal quantity;
@@ -15,7 +30,7 @@ public class SaleCalculator implements TransactionCalculator {
   /**
    * Constructor.
    *
-   * @param share The share to calculate on
+   * @param share the share to calculate on
    */
   public SaleCalculator(Share share) {
     this.purchasePrice = share.purchasePrice();
@@ -24,39 +39,42 @@ public class SaleCalculator implements TransactionCalculator {
   }
 
   /**
-   * Calculates the gross, salesprice * quantity.
+   * Calculates the gross: salesPrice × quantity.
    *
-   * @return The gross
+   * @return the gross
    */
   public BigDecimal calculateGross() {
     return this.salesPrice.multiply(this.quantity);
   }
 
   /**
-   * Calculates the commision, gross * 1%.
+   * Calculates the commission: {@link #COMMISSION_RATE} of gross.
    *
-   * @return the commision
+   * @return the commission
    */
-  public BigDecimal calculateCommision() {
-    return calculateGross().multiply(BigDecimal.valueOf(0.01));
+  public BigDecimal calculateCommission() {
+    return calculateGross().multiply(COMMISSION_RATE);
   }
 
   /**
-   * Calculates the tax, gross - commision - (salesprice*quantity).
+   * Calculates the capital-gains tax.
    *
-   * @return The tax
+   * <p>Tax is {@link #TAX_RATE} of the realized gain. No tax is charged on losses.
+   *
+   * @return the tax
    */
   public BigDecimal calculateTax() {
-    return calculateGross().subtract(calculateCommision())
-        .subtract(this.purchasePrice.multiply(this.quantity));
+    BigDecimal costBasis = purchasePrice.multiply(quantity);
+    BigDecimal gain = calculateGross().subtract(costBasis).subtract(calculateCommission());
+    return gain.signum() > 0 ? gain.multiply(TAX_RATE) : BigDecimal.ZERO;
   }
 
   /**
-   * Calculates the total sales value, gross - commision - tax.
+   * Calculates the total proceeds: gross − commission − tax.
    *
-   * @return The total
+   * @return the total
    */
   public BigDecimal calculateTotal() {
-    return calculateGross().subtract(calculateCommision()).subtract(calculateTax());
+    return calculateGross().subtract(calculateCommission()).subtract(calculateTax());
   }
 }

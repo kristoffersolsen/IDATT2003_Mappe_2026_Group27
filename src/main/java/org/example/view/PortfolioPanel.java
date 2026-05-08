@@ -18,6 +18,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.example.model.Share;
+import org.example.model.transaction.SaleCalculator;
 import org.example.util.Format;
 
 /**
@@ -52,7 +53,7 @@ public class PortfolioPanel extends VBox {
     ScrollPane scroll = new ScrollPane(rowContainer);
     scroll.setFitToWidth(true);
     scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-    scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    scroll.getStyleClass().add("transparent-scroll");
     VBox.setVgrow(scroll, Priority.ALWAYS);
 
     VBox content = new VBox(12, title, scroll);
@@ -101,13 +102,10 @@ public class PortfolioPanel extends VBox {
           .multiply(BigDecimal.valueOf(100));
 
     boolean positive = pnlTotal.signum() >= 0;
-    String badgeBg = positive ? "#1b5e20" : "#7f0000";
-    String badgeFg = positive ? "#a5d6a7" : "#ef9a9a";
     String sign = positive ? "+" : "";
 
     Label symbolLabel = new Label(share.stock().getSymbol());
-    symbolLabel.getStyleClass().addAll("font-white", "font-content");
-    symbolLabel.setStyle("-fx-font-weight: bold;");
+    symbolLabel.getStyleClass().addAll("font-white", "font-content", "font-bold");
 
     Label companyLabel = new Label(share.stock().getCompany());
     companyLabel.getStyleClass().addAll("font-grey", "font-small");
@@ -117,12 +115,7 @@ public class PortfolioPanel extends VBox {
     Label pnlBadge = new Label(
         sign + Format.formatMoney(pnlTotal)
             + "  (" + sign + String.format("%.2f", pnlPct.doubleValue()) + "%)");
-    pnlBadge.setStyle(
-        "-fx-background-color: " + badgeBg + ";"
-            + " -fx-text-fill: " + badgeFg + ";"
-            + " -fx-font-size: 11px;"
-            + " -fx-padding: 2 7 2 7;"
-            + " -fx-background-radius: 99px;");
+    pnlBadge.getStyleClass().add(positive ? "pnl-badge-positive" : "pnl-badge-negative");
 
     Region spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -152,7 +145,7 @@ public class PortfolioPanel extends VBox {
 
     VBox card = new VBox(6, topRow, detailLabel, bottomRow);
     card.setPadding(new Insets(10, 12, 10, 12));
-    card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 6px;");
+    card.getStyleClass().add("portfolio-card");
     return card;
   }
 
@@ -194,18 +187,19 @@ public class PortfolioPanel extends VBox {
     grossLabel.getStyleClass().addAll("font-white", "font-small");
     commLabel.getStyleClass().addAll("font-grey", "font-small");
     taxLabel.getStyleClass().addAll("font-grey", "font-small");
-    netLabel.getStyleClass().addAll("font-white", "font-small");
-    netLabel.setStyle("-fx-font-weight: bold;");
+    netLabel.getStyleClass().addAll("font-white", "font-small", "net-label");
     pnlLabel.getStyleClass().add("font-small");
 
     Runnable updateSummary = () -> {
       int qty = spinnerFactory.getValue();
       BigDecimal q = BigDecimal.valueOf(qty);
       BigDecimal gross = currentPrice.multiply(q);
-      BigDecimal commission = gross.multiply(BigDecimal.valueOf(0.01));
+      BigDecimal commission = gross.multiply(SaleCalculator.COMMISSION_RATE);
       BigDecimal costBasis = avgCost.multiply(q);
-      BigDecimal rawTax = gross.subtract(commission).subtract(costBasis);
-      BigDecimal tax = rawTax.signum() < 0 ? BigDecimal.ZERO : rawTax;
+      BigDecimal gain = gross.subtract(commission).subtract(costBasis);
+      BigDecimal tax = gain.signum() > 0
+          ? gain.multiply(SaleCalculator.TAX_RATE)
+          : BigDecimal.ZERO;
       BigDecimal net = gross.subtract(commission).subtract(tax);
 
       grossLabel.setText("$" + Format.formatMoney(gross));
@@ -217,8 +211,8 @@ public class PortfolioPanel extends VBox {
       boolean pos = pnlTotal.signum() >= 0;
       String s = pos ? "+" : "";
       pnlLabel.setText(s + "$" + Format.formatMoney(pnlTotal.abs()));
-      pnlLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: "
-          + (pos ? "#81c784" : "#e57373") + ";");
+      pnlLabel.getStyleClass().removeAll("pnl-positive", "pnl-negative");
+      pnlLabel.getStyleClass().add(pos ? "pnl-positive" : "pnl-negative");
     };
     spinnerFactory.valueProperty().addListener((obs, o, n) -> updateSummary.run());
     updateSummary.run();
@@ -228,7 +222,7 @@ public class PortfolioPanel extends VBox {
         infoRow("Avg cost", "$" + Format.formatMoney(avgCost)),
         infoRow("Current price", "$" + Format.formatMoney(currentPrice)));
     posInfo.setPadding(new Insets(10, 12, 10, 12));
-    posInfo.setStyle("-fx-background-color: #2a2a2a; -fx-background-radius: 6px;");
+    posInfo.getStyleClass().add("modal-info-panel");
 
     VBox breakdown = new VBox(5,
         breakdownRow("Gross proceeds", grossLabel),
@@ -238,7 +232,7 @@ public class PortfolioPanel extends VBox {
         breakdownRow("You receive", netLabel),
         breakdownRow("Realised P&L", pnlLabel));
     breakdown.setPadding(new Insets(10, 12, 10, 12));
-    breakdown.setStyle("-fx-background-color: #2a2a2a; -fx-background-radius: 6px;");
+    breakdown.getStyleClass().add("modal-info-panel");
 
     Button cancelBtn = new Button("Cancel");
     cancelBtn.getStyleClass().add("button-light-grey");
@@ -247,9 +241,7 @@ public class PortfolioPanel extends VBox {
 
     Button confirmBtn = new Button("Confirm sell");
     confirmBtn.setPrefWidth(125);
-    confirmBtn.setStyle(
-        "-fx-background-color: #c62828; -fx-text-fill: white;"
-            + " -fx-background-radius: 4px; -fx-font-size: 13px;");
+    confirmBtn.getStyleClass().add("button-danger");
     confirmBtn.setOnAction(e -> {
       BigDecimal qty = BigDecimal.valueOf(spinnerFactory.getValue());
       closeModal();
@@ -279,16 +271,11 @@ public class PortfolioPanel extends VBox {
         buttonRow);
     card.setPadding(new Insets(20));
     card.setMaxWidth(270);
-    card.setStyle(
-        "-fx-background-color: #1e1e1e;"
-            + " -fx-background-radius: 8px;"
-            + " -fx-border-color: #555555;"
-            + " -fx-border-width: 1px;"
-            + " -fx-border-radius: 8px;");
+    card.getStyleClass().add("sell-modal-card");
 
     modalOverlay = new VBox(card);
     modalOverlay.setAlignment(Pos.CENTER);
-    modalOverlay.setStyle("-fx-background-color: rgba(0,0,0,0.6);");
+    modalOverlay.getStyleClass().add("modal-overlay");
     modalOverlay.setOnMouseClicked(e -> {
       if (e.getTarget() == modalOverlay) {
         closeModal();
@@ -333,7 +320,7 @@ public class PortfolioPanel extends VBox {
   private Region divider() {
     Region d = new Region();
     d.setPrefHeight(1);
-    d.setStyle("-fx-background-color: #444444;");
+    d.getStyleClass().add("modal-divider");
     return d;
   }
 }

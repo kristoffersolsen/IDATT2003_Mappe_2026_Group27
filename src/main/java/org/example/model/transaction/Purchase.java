@@ -2,7 +2,6 @@ package org.example.model.transaction;
 
 import org.example.model.Player;
 import org.example.model.Share;
-import org.example.service.TransactionArchive;
 
 /**
  * A purchase transaction

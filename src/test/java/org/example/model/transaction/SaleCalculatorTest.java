@@ -16,8 +16,10 @@ class SaleCalculatorTest {
   // stock salesPrice=10, share quantity=10, purchasePrice=5
   // gross = 10*10 = 100
   // commission = 100*0.01 = 1
-  // tax = 100 - 1 - (5*10) = 49
-  // total = 100 - 1 - 49 = 50
+  // costBasis = 5*10 = 50
+  // gain = 100 - 50 - 1 = 49
+  // tax = 49 * 0.22 = 10.78
+  // total = 100 - 1 - 10.78 = 88.22
   private final Stock stock = new Stock("SYM", "Company", BigDecimal.valueOf(10));
   private final Share share = new Share(stock, BigDecimal.valueOf(10), BigDecimal.valueOf(5));
   private final SaleCalculator calc = new SaleCalculator(share);
@@ -29,21 +31,54 @@ class SaleCalculatorTest {
   }
 
   @Test
-  @DisplayName("calculateCommision is 1% of gross")
-  void calculateCommision() {
-    assertEquals(0, BigDecimal.valueOf(1.00).compareTo(calc.calculateCommision()));
+  @DisplayName("calculateCommission is 1% of gross")
+  void calculateCommission() {
+    assertEquals(0, BigDecimal.valueOf(1.00).compareTo(calc.calculateCommission()));
   }
 
   @Test
-  @DisplayName("calculateTax is gross - commission - (purchasePrice × quantity)")
+  @DisplayName("calculateTax is 22% of realized gain")
   void calculateTax() {
-    assertEquals(0, BigDecimal.valueOf(49.00).compareTo(calc.calculateTax()));
+    assertEquals(0, BigDecimal.valueOf(10.78).compareTo(calc.calculateTax()));
   }
 
   @Test
-  @DisplayName("calculateTotal is gross - commission - tax (equals purchasePrice × quantity)")
+  @DisplayName("calculateTotal is gross − commission − tax")
   void calculateTotal() {
-    assertEquals(0, BigDecimal.valueOf(50.00).compareTo(calc.calculateTotal()));
+    assertEquals(0, BigDecimal.valueOf(88.22).compareTo(calc.calculateTotal()));
+  }
+
+  @Nested
+  @DisplayName("profitability")
+  class Profitability {
+
+    @Test
+    @DisplayName("profitable sale yields total greater than purchase cost basis")
+    void profitableSale_yieldsTotalGreaterThanCostBasis() {
+      BigDecimal costBasis = share.purchasePrice().multiply(share.quantity());
+      assertTrue(calc.calculateTotal().compareTo(costBasis) > 0);
+    }
+
+    @Test
+    @DisplayName("loss-making sale yields total less than cost basis but greater than zero")
+    void lossMakingSale_yieldsTotalLessThanCostBasisButPositive() {
+      Stock loserStock = new Stock("LOS", "Loser Co", BigDecimal.valueOf(3));
+      Share loserShare = new Share(loserStock, BigDecimal.valueOf(10), BigDecimal.valueOf(5));
+      SaleCalculator loserCalc = new SaleCalculator(loserShare);
+      BigDecimal costBasis = loserShare.purchasePrice().multiply(loserShare.quantity());
+      assertTrue(loserCalc.calculateTotal().compareTo(costBasis) < 0);
+      assertTrue(loserCalc.calculateTotal().compareTo(BigDecimal.ZERO) > 0);
+    }
+
+    @Test
+    @DisplayName("when salesPrice equals purchasePrice only commission is lost")
+    void noProfitWhenPriceUnchanged() {
+      Stock flatStock = new Stock("FLAT", "Flat Co", BigDecimal.valueOf(5));
+      Share flatShare = new Share(flatStock, BigDecimal.valueOf(10), BigDecimal.valueOf(5));
+      SaleCalculator flatCalc = new SaleCalculator(flatShare);
+      // No gain, so no tax — only commission (0.5) is deducted from gross (50)
+      assertEquals(0, BigDecimal.valueOf(49.50).compareTo(flatCalc.calculateTotal()));
+    }
   }
 
   @Nested
@@ -54,20 +89,9 @@ class SaleCalculatorTest {
     @DisplayName("total + commission + tax equals gross")
     void totalPlusCommissionPlusTaxEqualsGross() {
       BigDecimal reconstructed = calc.calculateTotal()
-        .add(calc.calculateCommision())
-        .add(calc.calculateTax());
+          .add(calc.calculateCommission())
+          .add(calc.calculateTax());
       assertEquals(0, reconstructed.compareTo(calc.calculateGross()));
-    }
-
-    @Test
-    @DisplayName("no profit when salesPrice equals purchasePrice (only commission lost)")
-    void noProfitWhenPriceUnchanged() {
-      Stock flatStock = new Stock("FLAT", "Flat Co", BigDecimal.valueOf(5));
-      Share flatShare = new Share(flatStock, BigDecimal.valueOf(10), BigDecimal.valueOf(5));
-      SaleCalculator flatCalc = new SaleCalculator(flatShare);
-      // gross = 50, commission = 0.5, tax = 50 - 0.5 - 50 = -0.5 (negative tax)
-      // total = 50 - 0.5 - (-0.5) = 50  — player gets purchase price back exactly
-      assertEquals(0, BigDecimal.valueOf(50).compareTo(flatCalc.calculateTotal()));
     }
 
     @Test

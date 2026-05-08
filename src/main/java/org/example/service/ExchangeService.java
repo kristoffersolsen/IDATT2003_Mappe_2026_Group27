@@ -1,8 +1,10 @@
 package org.example.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import org.example.model.Exchange;
 import org.example.model.Player;
@@ -13,6 +15,8 @@ import org.example.model.StockFileRecord;
 import org.example.model.observer.GameEvent;
 import org.example.model.transaction.Transaction;
 import org.example.model.transaction.TransactionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service that operates on an {@link Exchange}.
@@ -23,6 +27,8 @@ import org.example.model.transaction.TransactionFactory;
  */
 public class ExchangeService {
 
+  private static final Logger log = LoggerFactory.getLogger(ExchangeService.class);
+
   private static final double LOWER_CHANGE = -0.1;
   private static final double UPPER_CHANGE = 0.1;
 
@@ -31,13 +37,14 @@ public class ExchangeService {
   private StockFileRecord stockFileRecord;
 
   /**
-   * Constructs a service wrapping the given exchange.
+   * Package-private constructor used by the public factory methods.
    *
    * @param exchange the exchange to operate on
+   * @param random   random source for price simulation
    */
-  public ExchangeService(Exchange exchange) {
+  ExchangeService(Exchange exchange, Random random) {
     this.exchange = exchange;
-    this.random = new Random();
+    this.random = random;
   }
 
   /**
@@ -48,10 +55,20 @@ public class ExchangeService {
    * @param stockFileRecord the file record to read stocks and week from
    */
   public ExchangeService(String name, StockFileRecord stockFileRecord) {
-    int startWeek = stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek();
-    this.exchange = new Exchange(name, startWeek, stockFileRecord.getStocks());
+    this(new Exchange(name,
+        stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek(),
+        stockFileRecord.getStocks()), new Random());
     this.stockFileRecord = stockFileRecord;
-    this.random = new Random();
+  }
+
+  /**
+   * Creates a service wrapping the given exchange, intended for test use.
+   *
+   * @param exchange the exchange to operate on
+   * @return a new service with a default {@link Random}
+   */
+  public static ExchangeService forTesting(Exchange exchange) {
+    return new ExchangeService(exchange, new Random());
   }
 
   /**
@@ -71,10 +88,10 @@ public class ExchangeService {
    * @return matching stocks
    */
   public List<Stock> findStocks(String searchTerm) {
-    String lower = searchTerm.toLowerCase();
+    String lower = searchTerm.toLowerCase(Locale.ROOT);
     return exchange.getStocks().stream()
-        .filter(s -> s.getCompany().toLowerCase().contains(lower)
-            || s.getSymbol().toLowerCase().contains(lower))
+        .filter(s -> s.getCompany().toLowerCase(Locale.ROOT).contains(lower)
+            || s.getSymbol().toLowerCase(Locale.ROOT).contains(lower))
         .toList();
   }
 
@@ -160,6 +177,7 @@ public class ExchangeService {
     player.addMoney(transaction.getCalculator().calculateTotal());
     portfolio.removeShare(heldShare, quantityToSell);
     player.getTransactionArchive().add(transaction);
+    transaction.markCommitted();
 
     exchange.notifyObservers(GameEvent.STOCK_SOLD);
     return transaction;
@@ -185,9 +203,13 @@ public class ExchangeService {
   public void saveState() {
     if (stockFileRecord != null) {
       stockFileRecord.setStocks(exchange.getStocks());
-      stockFileRecord.writeToFile();
+      try {
+        StockFileService.writeStocks(stockFileRecord);
+      } catch (IOException e) {
+        log.error("Failed to write stock file record", e);
+      }
     } else {
-      System.err.println("No StockFileRecord associated with this ExchangeService.");
+      log.warn("No StockFileRecord associated with this ExchangeService");
     }
   }
 }

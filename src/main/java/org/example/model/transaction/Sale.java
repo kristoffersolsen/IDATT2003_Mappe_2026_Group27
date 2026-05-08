@@ -8,14 +8,14 @@ import org.example.model.Share;
  * A sale transaction.
  *
  * <p>In addition to the fields inherited from {@link Transaction}, a sale
- * records the actual sale price per share and the realised gain (or loss)
+ * records the actual sale price per share and the realized gain (or loss)
  * at the time it is created, so the transaction history can display them
  * without recomputing.
  */
 public class Sale extends Transaction {
 
   private final BigDecimal salePrice;
-  private final BigDecimal realisedGain;
+  private final BigDecimal realizedGain;
 
   /**
    * Constructor.
@@ -32,7 +32,7 @@ public class Sale extends Transaction {
     // Realised gain = net proceeds − original cost basis
     BigDecimal proceeds = calc.calculateTotal();
     BigDecimal costBasis = share.purchasePrice().multiply(share.quantity());
-    this.realisedGain = proceeds.subtract(costBasis);
+    this.realizedGain = proceeds.subtract(costBasis);
   }
 
   /**
@@ -45,14 +45,14 @@ public class Sale extends Transaction {
   }
 
   /**
-   * Returns the realised gain (positive) or loss (negative) for this sale.
+   * Returns the realized gain (positive) or loss (negative) for this sale.
    *
    * <p>Calculated as net proceeds minus original cost basis.
    *
-   * @return realised gain/loss
+   * @return realized gain/loss
    */
   public BigDecimal getRealisedGain() {
-    return realisedGain;
+    return realizedGain;
   }
 
   /**

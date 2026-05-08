@@ -1,0 +1,10 @@
+/* ---- Transaction rows ---- */
+.tx-card {
+    -fx-background-color: #3c3c3c;
+    -fx-background-radius: 6px;
+}
+.tx-type-buy  { -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #4caf50; }
+.tx-type-sell { -fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: #f44336; }
+
+.gain-positive { -fx-font-size: 11px; -fx-text-fill: #81c784; }
+.gain-negative { -fx-font-size: 11px; -fx-text-fill: #e57373; }

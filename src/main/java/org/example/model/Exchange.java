@@ -1,5 +1,7 @@
 package org.example.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +85,6 @@ public class Exchange extends Observable {
    * @return all stocks
    */
   public List<Stock> getStocks() {
-    return List.copyOf(stockMap.values());
+    return Collections.unmodifiableList(new ArrayList<>(stockMap.values()));
   }
 }

@@ -18,9 +18,6 @@ import java.util.List;
  * Contains information when reading/writing from a file. Used by Exchange to save its state.
  */
 public class StockFileService {
-  private static final String FILE_HEADER = "#Symbol, Name, Price";
-  private static final String PATH_TO_FILES =
-      System.getProperty("user.dir") + "/src/main/resources/data/stocks/";
 
   /**
    * Writes a list of Stocks to a file with a header description.

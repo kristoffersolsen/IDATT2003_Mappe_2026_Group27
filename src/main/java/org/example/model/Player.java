@@ -1,15 +1,12 @@
 package org.example.model;
 
 import java.math.BigDecimal;
-import org.example.service.TransactionArchive;
 import org.example.model.observer.GameEvent;
-import org.example.model.observer.GameObserver;
 import org.example.model.observer.Observable;
-import java.util.ArrayList;
-import java.util.List;
+import org.example.model.transaction.TransactionArchive;
 
 /**
- * Player class that reperesents a player.
+ * Player class that represents a player.
  */
 public class Player extends Observable {
   private final String name;
@@ -17,14 +14,11 @@ public class Player extends Observable {
   private BigDecimal money;
   private final Portfolio portfolio;
   private final TransactionArchive transactionArchive;
-  private final Status status;
-
-  private final List<GameObserver> observers = new ArrayList<>();
 
   /**
    * Default constructor.
    *
-   * @param name          Name of player
+   * @param name          name of player
    * @param startingMoney starting money of player
    */
   public Player(String name, BigDecimal startingMoney) {
@@ -33,7 +27,6 @@ public class Player extends Observable {
     this.money = startingMoney;
     this.portfolio = new Portfolio();
     this.transactionArchive = new TransactionArchive();
-    this.status = Status.NOVICE;
   }
 
   public String getName() {
@@ -45,17 +38,26 @@ public class Player extends Observable {
   }
 
   /**
-   * Adds money to players account.
+   * Returns the starting money used to initialize this player.
+   *
+   * @return the starting money
+   */
+  public BigDecimal getStartingMoney() {
+    return startingMoney;
+  }
+
+  /**
+   * Adds money to the player's account.
    *
    * @param amount amount to add
    */
   public void addMoney(BigDecimal amount) {
     this.money = this.money.add(amount);
-    notifyObservers(GameEvent.BALANCE_CHANGED); // ADD THIS LINE
+    notifyObservers(GameEvent.BALANCE_CHANGED);
   }
 
   /**
-   * Withdraws money to players account.
+   * Withdraws money from the player's account.
    *
    * @param amount amount to withdraw
    */
@@ -77,20 +79,19 @@ public class Player extends Observable {
   }
 
   /**
-   * Checks the week and net worth growth to determine player status.
+   * Checks the week and net-worth growth to determine player status.
    *
-   * @param week the week to check for.
-   * @return Status of player
+   * @param week the current week
+   * @return the highest {@link Status} tier the player qualifies for
    */
   public Status getStatus(int week) {
-    if (week >= 20 && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(2))) >= 0) {
-      return Status.SPECULATOR;
-    } else if (week >= 10
-        && getNetWorth().compareTo(startingMoney.multiply(BigDecimal.valueOf(1.2))) >= 0) {
-      return Status.INVESTOR;
-    } else {
-      return Status.NOVICE;
+    BigDecimal netWorth = getNetWorth();
+    Status[] values = Status.values();
+    for (int i = values.length - 1; i > 0; i--) {
+      if (values[i].qualifies(week, startingMoney, netWorth)) {
+        return values[i];
+      }
     }
+    return Status.NOVICE;
   }
 }
-

@@ -7,8 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -38,11 +36,11 @@ public class StartView {
    */
   public StartView() {
     Label title = new Label("Millions");
-    title.setStyle("-fx-font-size: 96px;");
+    title.getStyleClass().add("start-title");
 
     GridPane form = buildForm();
 
-    errorLabel.setStyle("-fx-text-fill: red; -fx-font-size: 13px;");
+    errorLabel.getStyleClass().add("start-error");
     errorLabel.setVisible(false);
 
     startButton.setPrefWidth(160);
@@ -52,18 +50,9 @@ public class StartView {
     card.setAlignment(Pos.CENTER);
     card.setPadding(new Insets(40));
     card.setMaxWidth(420);
-    card.setStyle(
-        "-fx-background-color: #d9d9d9;"
-            + "-fx-background-radius: 8px;");
+    card.getStyleClass().add("screen-card");
 
-    Region topSpacer = new Region();
-    Region bottomSpacer = new Region();
-    VBox.setVgrow(topSpacer, Priority.ALWAYS);
-    VBox.setVgrow(bottomSpacer, Priority.ALWAYS);
-
-    root = new VBox(topSpacer, title, card, bottomSpacer);
-    root.setAlignment(Pos.CENTER);
-    root.setStyle("-fx-background-color: white;");
+    root = CenteredCardLayout.build(title, card);
   }
 
   /**

@@ -1,20 +1,23 @@
 package org.example.model.transaction;
 
+import java.math.BigDecimal;
 import org.example.model.Share;
 
-import java.math.BigDecimal;
-
 /**
- * Calculators for when a share is purchased.
+ * Calculator for when a share is purchased.
  */
 public class PurchaseCalculator implements TransactionCalculator {
+
+  /** Commission charged on purchases: 0.5% of gross. */
+  public static final BigDecimal COMMISSION_RATE = new BigDecimal("0.005");
+
   private final BigDecimal purchasePrice;
   private final BigDecimal quantity;
 
   /**
    * Constructor.
    *
-   * @param share The share to calculate on
+   * @param share the share to calculate on
    */
   public PurchaseCalculator(Share share) {
     this.purchasePrice = share.purchasePrice();
@@ -22,38 +25,38 @@ public class PurchaseCalculator implements TransactionCalculator {
   }
 
   /**
-   * Calculates the gross, purchasePrice * quantity
+   * Calculates the gross: purchasePrice × quantity.
    *
-   * @return The gross
+   * @return the gross
    */
   public BigDecimal calculateGross() {
     return this.purchasePrice.multiply(this.quantity);
   }
 
   /**
-   * Calculates the commision, 0.5% of gross.
+   * Calculates the commission: {@link #COMMISSION_RATE} of gross.
    *
-   * @return The commision
+   * @return the commission
    */
-  public BigDecimal calculateCommision() {
-    return calculateGross().multiply(BigDecimal.valueOf(0.005));
+  public BigDecimal calculateCommission() {
+    return calculateGross().multiply(COMMISSION_RATE);
   }
 
   /**
-   * Calculates the tax, always 0 for purchases.
+   * Calculates the tax, always zero for purchases.
    *
-   * @return The tax
+   * @return zero
    */
   public BigDecimal calculateTax() {
-    return BigDecimal.valueOf(0);
+    return BigDecimal.ZERO;
   }
 
   /**
-   * Calculates the total cost of the purcahse, gross + commision + tax.
+   * Calculates the total cost of the purchase: gross + commission + tax.
    *
-   * @return The total cost
+   * @return the total cost
    */
   public BigDecimal calculateTotal() {
-    return calculateGross().add(calculateCommision()).add(calculateTax());
+    return calculateGross().add(calculateCommission()).add(calculateTax());
   }
 }

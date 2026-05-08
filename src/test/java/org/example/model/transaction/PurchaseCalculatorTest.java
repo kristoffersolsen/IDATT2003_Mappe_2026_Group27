@@ -25,9 +25,9 @@ class PurchaseCalculatorTest {
   }
 
   @Test
-  @DisplayName("calculateCommision is 0.5% of gross")
-  void calculateCommision() {
-    assertEquals(0, BigDecimal.valueOf(0.25).compareTo(calc.calculateCommision()));
+  @DisplayName("calculateCommission is 0.5% of gross")
+  void calculateCommission() {
+    assertEquals(0, BigDecimal.valueOf(0.25).compareTo(calc.calculateCommission()));
   }
 
   @Test
@@ -49,7 +49,7 @@ class PurchaseCalculatorTest {
     @Test
     @DisplayName("total equals gross plus commission")
     void totalEqualsGrossPlusCommission() {
-      BigDecimal expected = calc.calculateGross().add(calc.calculateCommision());
+      BigDecimal expected = calc.calculateGross().add(calc.calculateCommission());
       assertEquals(0, expected.compareTo(calc.calculateTotal()));
     }
 

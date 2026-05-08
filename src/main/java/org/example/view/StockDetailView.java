@@ -19,6 +19,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.example.model.Stock;
 import org.example.model.transaction.Purchase;
+import org.example.model.transaction.PurchaseCalculator;
 import org.example.model.transaction.Sale;
 import org.example.model.transaction.Transaction;
 import org.example.util.Format;
@@ -74,7 +75,7 @@ public class StockDetailView extends VBox {
   private void buildHeader() {
     symbolLabel.getStyleClass().addAll("font-black", "font-title");
     companyLabel.getStyleClass().addAll("font-grey", "font-small");
-    priceLabel.setStyle("-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #222222;");
+    priceLabel.getStyleClass().add("stock-price-label");
     changeAbsLabel.getStyleClass().addAll("font-small");
     changePctLabel.getStyleClass().addAll("font-small");
     highestPriceButton.getStyleClass().add("stat-button");
@@ -97,8 +98,7 @@ public class StockDetailView extends VBox {
     HBox header = new HBox(16, nameBlock, priceBlock, spacer, statButtons);
     header.setAlignment(Pos.CENTER_LEFT);
     header.setPadding(new Insets(16, 16, 12, 16));
-    header.setStyle("-fx-background-color: #d9d9d9; -fx-border-color: #cccccc;"
-        + " -fx-border-width: 0 0 1 0;");
+    header.getStyleClass().add("stock-header");
     return header;
   }
 
@@ -112,13 +112,12 @@ public class StockDetailView extends VBox {
     chart.setAnimated(false);
     chart.setCreateSymbols(true);
     chart.setPadding(new Insets(8, 16, 0, 8));
-    chart.setStyle("-fx-background-color: transparent;");
+    chart.getStyleClass().add("stock-chart");
   }
 
   private VBox buildBottomSection() {
     Label purchaseTitle = new Label("Purchase");
-    purchaseTitle.getStyleClass().addAll("font-black", "font-content");
-    purchaseTitle.setStyle("-fx-font-weight: bold;");
+    purchaseTitle.getStyleClass().addAll("font-black", "font-content", "section-title");
 
     Label qtyLabel = new Label("Quantity");
     qtyLabel.getStyleClass().addAll("font-black", "font-small");
@@ -128,8 +127,7 @@ public class StockDetailView extends VBox {
 
     buyTotalLabel.getStyleClass().addAll("font-grey", "font-small");
 
-    buyErrorLabel.getStyleClass().add("font-small");
-    buyErrorLabel.setStyle("-fx-text-fill: #e53935;");
+    buyErrorLabel.getStyleClass().addAll("font-small", "error-text");
     buyErrorLabel.setVisible(false);
     buyErrorLabel.setManaged(false);
 
@@ -140,11 +138,10 @@ public class StockDetailView extends VBox {
 
     VBox buyForm = new VBox(8, purchaseTitle, buyRow, buyTotalLabel, buyErrorLabel);
     buyForm.setPadding(new Insets(14, 16, 14, 16));
-    buyForm.setStyle("-fx-background-color: #e0e0e0; -fx-background-radius: 6px;");
+    buyForm.getStyleClass().add("buy-form");
 
     Label txTitle = new Label("Transactions");
-    txTitle.getStyleClass().addAll("font-black", "font-content");
-    txTitle.setStyle("-fx-font-weight: bold;");
+    txTitle.getStyleClass().addAll("font-black", "font-content", "section-title");
 
     Label emptyHint = new Label("No transactions yet.");
     emptyHint.getStyleClass().addAll("font-grey", "font-small");
@@ -154,21 +151,21 @@ public class StockDetailView extends VBox {
     txScroll.setFitToWidth(true);
     txScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
     txScroll.setPrefHeight(120);
-    txScroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    txScroll.getStyleClass().add("transparent-scroll");
     VBox.setVgrow(txScroll, Priority.ALWAYS);
 
     VBox txPanel = new VBox(6, txTitle, txScroll);
     txPanel.setPadding(new Insets(14, 16, 14, 16));
-    txPanel.setStyle("-fx-background-color: #d9d9d9; -fx-background-radius: 6px;");
+    txPanel.getStyleClass().add("tx-panel");
     HBox.setHgrow(txPanel, Priority.ALWAYS);
 
     HBox bottomRow = new HBox(16, buyForm, txPanel);
     bottomRow.setPadding(new Insets(14, 16, 14, 16));
     bottomRow.setAlignment(Pos.TOP_LEFT);
-    bottomRow.setStyle("-fx-background-color: #e8e8e8;");
+    bottomRow.getStyleClass().add("bottom-section");
 
     VBox wrapper = new VBox(bottomRow);
-    wrapper.setStyle("-fx-background-color: #e8e8e8;");
+    wrapper.getStyleClass().add("bottom-section");
     return wrapper;
   }
 
@@ -206,7 +203,7 @@ public class StockDetailView extends VBox {
   public void updateBuyTotal(BigDecimal pricePerShare) {
     int qty = quantitySpinner.getValue();
     BigDecimal gross = pricePerShare.multiply(BigDecimal.valueOf(qty));
-    BigDecimal commission = gross.multiply(BigDecimal.valueOf(0.005));
+    BigDecimal commission = gross.multiply(PurchaseCalculator.COMMISSION_RATE);
     buyTotalLabel.setText("Est. total: $" + Format.formatMoney(gross.add(commission))
         + "  (incl. 0.5% commission)");
   }
@@ -254,8 +251,7 @@ public class StockDetailView extends VBox {
     boolean isBuy = tx instanceof Purchase;
 
     Label typeLabel = new Label(isBuy ? "Buy" : "Sell");
-    typeLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 11px; -fx-text-fill: "
-        + (isBuy ? "#4caf50" : "#f44336") + ";");
+    typeLabel.getStyleClass().add(isBuy ? "tx-type-buy" : "tx-type-sell");
     typeLabel.setPrefWidth(28);
 
     String qtyStr = tx.getShare().quantity().stripTrailingZeros().toPlainString();
@@ -286,8 +282,7 @@ public class StockDetailView extends VBox {
     Label gainLabel = new Label(
         "avg $" + Format.formatMoney(sale.getShare().purchasePrice())
             + "   " + sign + "$" + Format.formatMoney(gain.abs()));
-    gainLabel.setStyle("-fx-font-size: 10px; -fx-text-fill: "
-        + (positive ? "#4caf50" : "#f44336") + ";");
+    gainLabel.getStyleClass().add(positive ? "gain-positive" : "gain-negative");
 
     return wrap(topRow, gainLabel);
   }

@@ -42,7 +42,7 @@ public class TransactionsPanel extends VBox {
     ScrollPane scroll = new ScrollPane(rowContainer);
     scroll.setFitToWidth(true);
     scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-    scroll.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    scroll.getStyleClass().add("transparent-scroll");
     VBox.setVgrow(scroll, Priority.ALWAYS);
 
     setSpacing(12);
@@ -120,17 +120,14 @@ public class TransactionsPanel extends VBox {
     Label gainLabel = new Label(
         "avg cost $" + Format.formatMoney(tx.getShare().purchasePrice())
             + "   realised " + sign + "$" + Format.formatMoney(gain.abs()));
-    gainLabel.setStyle(
-        "-fx-font-size: 11px; -fx-text-fill: " + (positive ? "#81c784" : "#e57373") + ";");
+    gainLabel.getStyleClass().add(positive ? "gain-positive" : "gain-negative");
 
     return card(topRow, gainLabel);
   }
 
   private Label typeLabel(String text, boolean isBuy) {
     Label label = new Label(text);
-    label.setStyle(
-        "-fx-font-weight: bold; -fx-font-size: 12px; -fx-text-fill: "
-            + (isBuy ? "#4caf50" : "#f44336") + ";");
+    label.getStyleClass().add(isBuy ? "tx-type-buy" : "tx-type-sell");
     label.setPrefWidth(32);
     label.setMinWidth(32);
     return label;
@@ -156,7 +153,7 @@ public class TransactionsPanel extends VBox {
     VBox card = new VBox(4);
     card.getChildren().addAll(nodes);
     card.setPadding(new Insets(8, 10, 8, 10));
-    card.setStyle("-fx-background-color: #3c3c3c; -fx-background-radius: 6px;");
+    card.getStyleClass().add("tx-card");
     return card;
   }
 }

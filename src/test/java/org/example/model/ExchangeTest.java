@@ -29,7 +29,7 @@ class ExchangeTest {
         new Stock("CCC", "Company C", BigDecimal.valueOf(30))
     );
     exchange = new Exchange("Exchange A", 1, stocks);
-    exchangeService = new ExchangeService(exchange);
+    exchangeService = ExchangeService.forTesting(exchange);
   }
 
   @Nested

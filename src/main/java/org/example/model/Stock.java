@@ -2,23 +2,28 @@ package org.example.model;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A stock in a company. A symbol can, for example be "AAPL" for the company Apple.
  */
 public class Stock {
-  public String symbol;
+
+  private static final Logger log = LoggerFactory.getLogger(Stock.class);
+
+  private final String symbol;
   private final String company;
-  private final ArrayList<BigDecimal> prices = new ArrayList<BigDecimal>();
+  private final List<BigDecimal> prices = new ArrayList<>();
 
   /**
-   * Default stock construcutor.
+   * Default stock constructor.
    *
-   * @param symbol     Set of letters representing the company name.
-   * @param company    The name of the company.
-   * @param salesPrice Last salesPrice of the stock
+   * @param symbol     set of letters representing the company name
+   * @param company    the name of the company
+   * @param salesPrice last sales price of the stock
    */
   public Stock(String symbol, String company, BigDecimal salesPrice) {
     this.symbol = symbol;
@@ -39,7 +44,7 @@ public class Stock {
   }
 
   /**
-   * Adds a new sales price to prices.
+   * Adds a new sales price to the price history.
    *
    * @param price price to add
    */
@@ -48,50 +53,42 @@ public class Stock {
   }
 
   /**
-   * Retrieves all historical prices.
+   * Returns an unmodifiable view of all historical prices.
    *
-   * @return List of prices
+   * @return list of prices, oldest first
    */
   public List<BigDecimal> getHistoricalPrices() {
-    return this.prices;
+    return Collections.unmodifiableList(prices);
   }
 
   /**
-   * Retrieves the highest historical price.
+   * Returns the highest historical price.
    *
-   * @return The highest price
+   * @return the highest price
    */
   public BigDecimal getHighestPrice() {
-    try {
-      return this.prices.stream().max(BigDecimal::compareTo).get();
-    } catch (NoSuchElementException e) {
-      System.out.println("No prices found");
-      return null;
-    }
+    return prices.stream().max(BigDecimal::compareTo).orElseThrow();
   }
 
   /**
-   * Retrieves  the lowest historical price.
+   * Returns the lowest historical price.
    *
    * @return the lowest price
    */
   public BigDecimal getLowestPrice() {
-    try {
-      return this.prices.stream().min(BigDecimal::compareTo).get();
-    } catch (NoSuchElementException e) {
-      System.out.println("No prices found");
-      return null;
-    }
+    return prices.stream().min(BigDecimal::compareTo).orElseThrow();
   }
 
   /**
-   * Retrieves the difference between the latest and second latest prices.
+   * Returns the difference between the latest and second-latest prices.
    *
-   * @return the difference
+   * <p>Returns {@link BigDecimal#ZERO} when fewer than two prices exist.
+   *
+   * @return the latest price change
    */
   public BigDecimal getLatestPriceChange() {
     if (this.prices.size() < 2) {
-      System.out.println("Not enough prices for comparison in stock: " + this.symbol);
+      log.debug("Not enough prices for comparison in stock: {}", symbol);
       return BigDecimal.ZERO;
     }
     BigDecimal latestPrice = this.prices.get(this.prices.size() - 1);
@@ -100,9 +97,9 @@ public class Stock {
   }
 
   /**
-   * Converts parameters to a list of strings. Used in file handling.
+   * Converts parameters to a string array. Used in file handling.
    *
-   * @return Stock parameters as a list of strings
+   * @return stock parameters as a string array
    */
   public String[] toStringList() {
     return new String[] {

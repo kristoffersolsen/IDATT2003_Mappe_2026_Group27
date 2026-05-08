@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 import org.example.model.Stock;
 import org.example.service.ExchangeService;
@@ -53,16 +54,14 @@ public class MarketController {
     List<Stock> stocks = switch (activeFilter) {
       case GAINERS -> exchangeService.getGainers(Integer.MAX_VALUE);
       case LOSERS -> exchangeService.getLosers(Integer.MAX_VALUE);
-      case ALL -> activeQuery.isBlank()
-          ? exchangeService.getExchange().getStocks()
-          : exchangeService.findStocks(activeQuery);
+      case ALL -> exchangeService.getExchange().getStocks();
     };
 
-    if (!activeQuery.isBlank() && activeFilter != Filter.ALL) {
-      String q = activeQuery.toLowerCase();
+    if (!activeQuery.isBlank()) {
+      String q = activeQuery.toLowerCase(Locale.ROOT);
       stocks = stocks.stream()
-          .filter(s -> s.getCompany().toLowerCase().contains(q)
-              || s.getSymbol().toLowerCase().contains(q))
+          .filter(s -> s.getCompany().toLowerCase(Locale.ROOT).contains(q)
+              || s.getSymbol().toLowerCase(Locale.ROOT).contains(q))
           .toList();
     }
 
