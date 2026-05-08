@@ -39,25 +39,34 @@ jobs:
         # Runs Checkstyle (validate phase), Surefire (tests), and JaCoCo report.
         run: mvn --batch-mode --no-transfer-progress verify
 
-      - name: Generate Checkstyle HTML report
-        # `verify` enforces Checkstyle but doesn't produce the browsable HTML.
-        # This goal generates target/site/checkstyle.html.
-        # Runs even on test failure so we still get a Checkstyle report.
+      - name: Generate site reports
+        # Generates the HTML reports defined in pom.xml's <reporting> block
+        # (Checkstyle and JaCoCo) under target/site/.
+        # `-DgenerateProjectInfo=false` skips the boilerplate "About" pages we
+        # don't need. Runs on success or failure so a red build still gets a
+        # report (it just won't be deployed).
         if: success() || failure()
-        run: mvn --batch-mode --no-transfer-progress checkstyle:checkstyle
+        run: >
+          mvn --batch-mode --no-transfer-progress
+          site -DgenerateProjectInfo=false
 
       - name: Assemble Pages site
         # Combines both reports under a single directory with an index page.
         # Only runs on push to main; PR runs build but don't publish.
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          set -e
           mkdir -p public/jacoco public/checkstyle
+
+          # JaCoCo: pom.xml writes the report to target/site/jacoco/.
           cp -r target/site/jacoco/. public/jacoco/
+
+          # Checkstyle: mvn site renders the report as target/site/checkstyle.html
+          # plus shared CSS/image assets at target/site/css/ and target/site/images/.
           cp target/site/checkstyle.html public/checkstyle/index.html
-          # Maven's Checkstyle report links to shared assets at site root.
-          # Copy them next to the report so links resolve.
           [ -d target/site/css ] && cp -r target/site/css public/checkstyle/
           [ -d target/site/images ] && cp -r target/site/images public/checkstyle/
+
           cat > public/index.html <<'HTML'
           <!DOCTYPE html>
           <html lang="en">
@@ -85,6 +94,16 @@ jobs:
           </body>
           </html>
           HTML
+
+      - name: List generated site contents
+        # Diagnostic step — prints what mvn site actually produced. Cheap and
+        # invaluable when something doesn't end up where we expect.
+        if: always()
+        run: |
+          echo "=== target/site contents ==="
+          ls -la target/site/ || echo "target/site does not exist"
+          echo "=== target/site/jacoco contents ==="
+          ls -la target/site/jacoco/ 2>/dev/null || echo "no jacoco directory"
 
       - name: Upload test results
         # Always run so reports are available even when tests fail.
