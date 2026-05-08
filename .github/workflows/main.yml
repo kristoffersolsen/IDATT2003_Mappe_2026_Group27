@@ -11,6 +11,14 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Permissions needed for the deploy job to publish to Pages.
+# `contents: read` is the default; `pages: write` and `id-token: write` are
+# required by actions/deploy-pages.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   verify:
     name: Build, test, and check style
@@ -28,11 +36,58 @@ jobs:
           cache: maven
 
       - name: Run Maven verify
-        # Runs Checkstyle (validate phase), Surefire (tests), and JaCoCo (coverage report).
+        # Runs Checkstyle (validate phase), Surefire (tests), and JaCoCo report.
         run: mvn --batch-mode --no-transfer-progress verify
 
+      - name: Generate Checkstyle HTML report
+        # `verify` enforces Checkstyle but doesn't produce the browsable HTML.
+        # This goal generates target/site/checkstyle.html.
+        # Runs even on test failure so we still get a Checkstyle report.
+        if: success() || failure()
+        run: mvn --batch-mode --no-transfer-progress checkstyle:checkstyle
+
+      - name: Assemble Pages site
+        # Combines both reports under a single directory with an index page.
+        # Only runs on push to main; PR runs build but don't publish.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p public/jacoco public/checkstyle
+          cp -r target/site/jacoco/. public/jacoco/
+          cp target/site/checkstyle.html public/checkstyle/index.html
+          # Maven's Checkstyle report links to shared assets at site root.
+          # Copy them next to the report so links resolve.
+          [ -d target/site/css ] && cp -r target/site/css public/checkstyle/
+          [ -d target/site/images ] && cp -r target/site/images public/checkstyle/
+          cat > public/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8">
+            <title>Build reports</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 640px;
+                     margin: 4rem auto; padding: 0 1rem; }
+              h1 { margin-bottom: 0.5rem; }
+              p { color: #555; }
+              ul { list-style: none; padding: 0; }
+              li { margin: 0.75rem 0; }
+              a { color: #0366d6; text-decoration: none; font-weight: 500; }
+              a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <h1>Build reports</h1>
+            <p>Generated from the latest push to <code>main</code>.</p>
+            <ul>
+              <li><a href="jacoco/index.html">JaCoCo coverage report</a></li>
+              <li><a href="checkstyle/index.html">Checkstyle report</a></li>
+            </ul>
+          </body>
+          </html>
+          HTML
+
       - name: Upload test results
-        # Always run so we get reports even when tests fail.
+        # Always run so reports are available even when tests fail.
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -40,10 +95,25 @@ jobs:
           path: target/surefire-reports/
           if-no-files-found: ignore
 
-      - name: Upload JaCoCo coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        # Only on push to main; PRs run verify but don't publish.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: jacoco-report
-          path: target/site/jacoco/
-          if-no-files-found: ignore
+          path: public
+
+  deploy:
+    name: Deploy reports to Pages
+    # Only deploy on push to main, and only after verify passes.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
