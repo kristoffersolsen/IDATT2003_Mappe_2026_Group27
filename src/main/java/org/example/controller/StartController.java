@@ -99,8 +99,7 @@ public class StartController {
         settings, new Random(settings.randomSeed()), null, null, null, null);
 
     Player player = new Player(name, capital);
-    ExchangeService exchangeService = new ExchangeService(
-        "Main Exchange", stockFile, settings.randomSeed());
+    ExchangeService exchangeService = new ExchangeService("Main Exchange", stockFile, settings);
 
     appController.startGame(player, exchangeService, context);
   }

@@ -6,12 +6,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import org.example.config.Difficulty;
+import org.example.config.GameDefaults;
+import org.example.config.GameSettings;
 import org.example.model.Exchange;
 import org.example.model.Player;
 import org.example.model.Portfolio;
 import org.example.model.Share;
 import org.example.model.Stock;
 import org.example.model.StockFileRecord;
+import org.example.model.market.MarketContext;
+import org.example.model.market.PriceModel;
 import org.example.model.observer.GameEvent;
 import org.example.model.transaction.Transaction;
 import org.example.model.transaction.TransactionFactory;
@@ -29,47 +34,60 @@ public class ExchangeService {
 
   private static final Logger log = LoggerFactory.getLogger(ExchangeService.class);
 
-  private static final double LOWER_CHANGE = -0.1;
-  private static final double UPPER_CHANGE = 0.1;
+  private static final long TESTING_SEED = 0L;
 
   private final Exchange exchange;
-  private final Random random;
+  private final PriceModel priceModel;
+  private final MarketContext marketContext;
   private StockFileRecord stockFileRecord;
 
   /**
    * Package-private constructor used by the public factory methods.
    *
-   * @param exchange the exchange to operate on
-   * @param random   random source for price simulation
+   * @param exchange      the exchange to operate on
+   * @param priceModel    the price model to use for simulation
+   * @param marketContext the market context providing settings and random source
    */
-  ExchangeService(Exchange exchange, Random random) {
+  ExchangeService(Exchange exchange, PriceModel priceModel, MarketContext marketContext) {
     this.exchange = exchange;
-    this.random = random;
+    this.priceModel = priceModel;
+    this.marketContext = marketContext;
   }
 
   /**
    * Constructs a service from a {@link StockFileRecord}, building the
    * exchange from the file's stock data and metadata.
    *
+   * <p>A default {@link PriceModel} is constructed automatically. The
+   * {@link MarketContext} is seeded from {@link GameSettings#randomSeed()}.
+   *
    * @param name            exchange name
    * @param stockFileRecord the file record to read stocks and week from
-   * @param seed            seed for the price-simulation {@link Random}
+   * @param settings        game settings supplying volatility, drift bias, and seed
    */
-  public ExchangeService(String name, StockFileRecord stockFileRecord, long seed) {
+  public ExchangeService(String name, StockFileRecord stockFileRecord, GameSettings settings) {
     this(new Exchange(name,
-        stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek(),
-        stockFileRecord.getStocks()), new Random(seed));
+            stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek(),
+            stockFileRecord.getStocks()),
+        new PriceModel(),
+        new MarketContext(settings, new Random(settings.randomSeed()), 0.0, 0.0));
     this.stockFileRecord = stockFileRecord;
   }
 
   /**
    * Creates a service wrapping the given exchange, intended for test use.
    *
+   * <p>Uses a default {@link PriceModel} and a deterministic
+   * {@link MarketContext} seeded with {@code 0} and NORMAL difficulty
+   * settings.
+   *
    * @param exchange the exchange to operate on
-   * @return a new service with a default {@link Random}
+   * @return a new service ready for testing
    */
   public static ExchangeService forTesting(Exchange exchange) {
-    return new ExchangeService(exchange, new Random());
+    GameSettings settings = GameDefaults.forDifficulty(Difficulty.NORMAL);
+    return new ExchangeService(exchange, new PriceModel(),
+        new MarketContext(settings, new Random(TESTING_SEED), 0.0, 0.0));
   }
 
   /**
@@ -185,14 +203,12 @@ public class ExchangeService {
   }
 
   /**
-   * Advances the exchange by one week, applying a random ±10% price
-   * change to every stock, then notifies observers.
+   * Advances the exchange by one week, updating every stock price via
+   * {@link PriceModel}, then notifies observers.
    */
   public void advance() {
     for (Stock stock : exchange.getStocks()) {
-      BigDecimal newPrice = stock.getSalesPrice()
-          .multiply(BigDecimal.valueOf(1.0 + random.nextDouble(LOWER_CHANGE, UPPER_CHANGE)));
-      stock.addNewSalesPrice(newPrice);
+      stock.addNewSalesPrice(priceModel.nextPrice(stock, marketContext));
     }
     exchange.incrementWeek();
     exchange.notifyObservers(GameEvent.WEEK_ADVANCED);
