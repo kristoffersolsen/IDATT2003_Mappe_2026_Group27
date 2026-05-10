@@ -1,8 +1,10 @@
 package org.example.view;
 
+import java.io.File;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -10,8 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-
-import java.io.File;
+import org.example.config.Difficulty;
 
 /**
  * The start screen shown when the application launches.
@@ -26,6 +27,7 @@ public class StartView {
 
   private final TextField nameField = new TextField();
   private final TextField capitalField = new TextField();
+  private final ChoiceBox<Difficulty> difficultyBox = new ChoiceBox<>();
   private final TextField fileNameField = new TextField();
   private final Button browseButton = new Button("Browse...");
   private final Button startButton = new Button("Start");
@@ -35,6 +37,9 @@ public class StartView {
    * Builds the start screen layout.
    */
   public StartView() {
+    difficultyBox.getItems().addAll(Difficulty.values());
+    difficultyBox.setValue(Difficulty.NORMAL);
+
     Label title = new Label("Millions");
     title.getStyleClass().add("start-title");
 
@@ -82,8 +87,11 @@ public class StartView {
     grid.add(new Label("Starting capital"), 0, 1);
     grid.add(capitalField, 1, 1);
 
-    grid.add(new Label("Stock data"), 0, 2);
-    grid.add(fileRow, 1, 2);
+    grid.add(new Label("Difficulty"), 0, 2);
+    grid.add(difficultyBox, 1, 2);
+
+    grid.add(new Label("Stock data"), 0, 3);
+    grid.add(fileRow, 1, 3);
 
     return grid;
   }
@@ -149,5 +157,10 @@ public class StartView {
 
   public String getStartingCapital() {
     return capitalField.getText().trim();
+  }
+
+  /** Returns the difficulty selected in the choice box. */
+  public Difficulty getDifficulty() {
+    return difficultyBox.getValue();
   }
 }

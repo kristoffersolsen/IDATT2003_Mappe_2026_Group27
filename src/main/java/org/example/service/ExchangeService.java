@@ -53,11 +53,12 @@ public class ExchangeService {
    *
    * @param name            exchange name
    * @param stockFileRecord the file record to read stocks and week from
+   * @param seed            seed for the price-simulation {@link Random}
    */
-  public ExchangeService(String name, StockFileRecord stockFileRecord) {
+  public ExchangeService(String name, StockFileRecord stockFileRecord, long seed) {
     this(new Exchange(name,
         stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek(),
-        stockFileRecord.getStocks()), new Random());
+        stockFileRecord.getStocks()), new Random(seed));
     this.stockFileRecord = stockFileRecord;
   }
 
