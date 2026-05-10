@@ -1,8 +1,8 @@
 package ntnu.idatt2003.millions.model.market;
 
 import java.util.Random;
-import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.config.GameSettings;
+import ntnu.idatt2003.millions.service.ExchangeService;
 
 /**
  * Immutable bundle of everything {@link PriceModel} needs to compute

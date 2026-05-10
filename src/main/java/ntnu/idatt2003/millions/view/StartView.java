@@ -12,8 +12,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import ntnu.idatt2003.millions.controller.StartController;
 import ntnu.idatt2003.millions.config.Difficulty;
+import ntnu.idatt2003.millions.controller.StartController;
 
 /**
  * The start screen shown when the application launches.
@@ -44,14 +44,13 @@ public class StartView {
     Label title = new Label("Millions");
     title.getStyleClass().add("start-title");
 
-    GridPane form = buildForm();
-
     errorLabel.getStyleClass().add("start-error");
     errorLabel.setVisible(false);
 
     startButton.setPrefWidth(160);
     startButton.setDefaultButton(true);
 
+    GridPane form = buildForm();
     VBox card = new VBox(20, form, errorLabel, startButton);
     card.setAlignment(Pos.CENTER);
     card.setPadding(new Insets(40));
