@@ -1,11 +1,12 @@
 package org.example.controller;
 
 import java.math.BigDecimal;
+import org.example.config.GameContext;
+import org.example.model.Player;
 import org.example.model.Share;
 import org.example.model.Stock;
 import org.example.model.observer.GameEvent;
 import org.example.model.observer.GameObserver;
-import org.example.model.Player;
 import org.example.service.ExchangeService;
 import org.example.util.Format;
 import org.example.view.DashboardView;
@@ -34,6 +35,7 @@ public class DashboardController implements GameObserver {
   private final Player player;
   private final ExchangeService exchangeService;
   private final AppController appController;
+  private final GameContext context;
 
   private final MarketController marketController;
   private final StockDetailController stockDetailController;
@@ -50,16 +52,19 @@ public class DashboardController implements GameObserver {
    * @param player          the active player
    * @param exchangeService the active exchange service
    * @param appController   the app-level controller
+   * @param context         the game context for this session
    */
   public DashboardController(
       DashboardView view,
       Player player,
       ExchangeService exchangeService,
-      AppController appController) {
+      AppController appController,
+      GameContext context) {
     this.view = view;
     this.player = player;
     this.exchangeService = exchangeService;
     this.appController = appController;
+    this.context = context;
 
     this.portfolioPanel = new PortfolioPanel(this::onSellShare);
     this.transactionsPanel = new TransactionsPanel();

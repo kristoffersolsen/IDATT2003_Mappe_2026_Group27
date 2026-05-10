@@ -2,8 +2,13 @@ package org.example.controller;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.Random;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.example.config.Difficulty;
+import org.example.config.GameContext;
+import org.example.config.GameDefaults;
+import org.example.config.GameSettings;
 import org.example.model.Player;
 import org.example.model.StockFileRecord;
 import org.example.service.ExchangeService;
@@ -88,9 +93,15 @@ public class StartController {
       return;
     }
 
-    Player player = new Player(name, capital);
-    ExchangeService exchangeService = new ExchangeService("Main Exchange", stockFile);
+    Difficulty difficulty = view.getDifficulty();
+    GameSettings settings = GameDefaults.forDifficulty(difficulty);
+    GameContext context = new GameContext(
+        settings, new Random(settings.randomSeed()), null, null, null, null);
 
-    appController.startGame(player, exchangeService);
+    Player player = new Player(name, capital);
+    ExchangeService exchangeService = new ExchangeService(
+        "Main Exchange", stockFile, settings.randomSeed());
+
+    appController.startGame(player, exchangeService, context);
   }
 }

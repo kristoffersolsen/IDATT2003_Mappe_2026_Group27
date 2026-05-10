@@ -1,6 +1,7 @@
 package org.example.controller;
 
 import javafx.stage.Stage;
+import org.example.config.GameContext;
 import org.example.model.Player;
 import org.example.service.ExchangeService;
 import org.example.util.Format;
@@ -42,11 +43,13 @@ public class AppController {
    *
    * @param player          the active player
    * @param exchangeService the active exchange service
+   * @param context         the game context for this session
    */
-  public void startGame(Player player, ExchangeService exchangeService) {
+  public void startGame(Player player, ExchangeService exchangeService, GameContext context) {
     disposeDashboard();
     DashboardView dashboardView = new DashboardView();
-    dashboardController = new DashboardController(dashboardView, player, exchangeService, this);
+    dashboardController = new DashboardController(
+        dashboardView, player, exchangeService, this, context);
     stage.getScene().setRoot(dashboardView.getRoot());
   }
 
