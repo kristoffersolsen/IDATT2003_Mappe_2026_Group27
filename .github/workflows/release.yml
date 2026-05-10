@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # ------------- Build once, reuse across all platforms -------------
+  build:
+    name: Build application JAR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: maven
+
+      - name: Build with Maven
+        # Runs Checkstyle, tests, and packages the JAR.
+        # maven-dependency-plugin copies runtime deps to target/libs/ at the
+        # package phase, giving jpackage a complete input directory.
+        run: mvn --batch-mode --no-transfer-progress package
+
+      - name: Upload JAR and dependencies
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-package
+          path: |
+            target/millions-*.jar
+            target/libs/
+          if-no-files-found: error
+
+  # ------------- Package per platform -------------
+  package:
+    name: Package on ${{ matrix.os }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            package-type: exe
+            artifact-glob: target/installer/*.exe
+          - os: macos-latest
+            platform: mac
+            package-type: dmg
+            artifact-glob: target/installer/*.dmg
+          - os: ubuntu-latest
+            platform: linux
+            package-type: deb
+            artifact-glob: target/installer/*.deb
+
+    steps:
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Download JAR and dependencies
+        uses: actions/download-artifact@v4
+        with:
+          name: app-package
+          path: target
+
+      # Strip the leading 'v' from the tag so jpackage gets '1.0.0' not 'v1.0.0'
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Run jpackage
+        shell: bash
+        run: |
+          JAR=$(ls target/millions-*.jar | head -1)
+          mkdir -p target/installer
+
+          jpackage \
+            --type ${{ matrix.package-type }} \
+            --name "Millions" \
+            --app-version "${{ steps.version.outputs.value }}" \
+            --vendor "Kristoffer Olsen" \
+            --input target \
+            --main-jar "$(basename "$JAR")" \
+            --main-class ntnu.idatt2003.millions.Main \
+            --dest target/installer \
+            --java-options "--add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED"
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.platform }}
+          path: ${{ matrix.artifact-glob }}
+          if-no-files-found: error
+
+  # ------------- Create GitHub Release and attach all installers -------------
+  release:
+    name: Create GitHub Release
+    needs: package
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: installer-*
+          merge-multiple: true
+          path: installers
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Millions ${{ github.ref_name }}
+          body: |
+            ## Installation
+
+            Download the installer for your platform below.
+
+            | Platform | File |
+            |---|---|
+            | Windows | `.exe` |
+            | macOS | `.dmg` |
+            | Linux (Debian/Ubuntu) | `.deb` |
+
+            **Note:** These installers are unsigned. On macOS, right-click the
+            `.dmg` and choose **Open** to bypass Gatekeeper on first launch.
+            On Windows, click **More info → Run anyway** if SmartScreen appears.
+          files: installers/*
+          draft: false
+          prerelease: false
