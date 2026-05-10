@@ -6,8 +6,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <!-- ===== PROJECT IDENTITY ===== -->
-    <groupId>org.example</groupId>
-    <artifactId>IDATT2003_Mappe</artifactId>
+    <groupId>ntnu.idatt2003.millions</groupId>
+    <artifactId>millions</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -15,8 +15,6 @@
     <properties>
         <!-- Java version — Java 25 is current LTS -->
         <java.version>25</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -27,7 +25,7 @@
         <checkstyle.version>13.4.0</checkstyle.version>
 
         <!-- Plugin versions -->
-        <maven.compiler.plugin.version>3.13.1</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.4</maven.surefire.plugin.version>
         <jacoco.plugin.version>0.8.14</jacoco.plugin.version>
         <checkstyle.plugin.version>3.6.0</checkstyle.plugin.version>
@@ -100,13 +98,60 @@
     <build>
         <plugins>
 
+            <!-- COMPILER: explicit configuration for Java 25 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven.compiler.plugin.version}</version>
+                <configuration>
+                    <release>${java.version}</release>
+                </configuration>
+            </plugin>
+
             <!-- JAVAFX: allows running the application with 'mvn javafx:run' -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>${javafx.plugin.version}</version>
                 <configuration>
-                    <mainClass>org.example.Main</mainClass>
+                    <mainClass>ntnu.idatt2003.millions.Main</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- DEPENDENCY: copy all runtime dependencies alongside the JAR.
+                 Used by the release workflow to give jpackage a complete
+                 input directory. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libs</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- JAR: write the Main-Class manifest entry so the JAR is
+                 executable and jpackage can locate the entry point. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>ntnu.idatt2003.millions.Main</mainClass>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
 
@@ -129,7 +174,7 @@
                 <version>${jacoco.plugin.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>org/example/Main.class</exclude>
+                        <exclude>ntnu/idatt2003/millions/Main.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -153,10 +198,11 @@
                             <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
                         </configuration>
                     </execution>
+
                 </executions>
             </plugin>
 
-            <!-- CHECKSTYLE: enforce code style on main sources only. -->
+            <!-- CHECKSTYLE: enforce code style on main sources only -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
