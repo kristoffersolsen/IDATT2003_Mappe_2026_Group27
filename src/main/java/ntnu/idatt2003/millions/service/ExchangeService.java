@@ -26,9 +26,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Service that operates on an {@link Exchange}.
  *
- * <p>Encapsulates all business logic for trading, week advancement,
+ * <p>Encapsulates all business logic for trading, tick advancement,
  * stock queries, and file persistence. The {@link Exchange} model class
  * itself holds only state.
+ *
+ * <p>TODO(team): split simulation logic into a dedicated SimulationService
+ * when AI traders are introduced in version 4.0.
  */
 public class ExchangeService {
 
@@ -62,12 +65,12 @@ public class ExchangeService {
    * {@link MarketContext} is seeded from {@link GameSettings#randomSeed()}.
    *
    * @param name            exchange name
-   * @param stockFileRecord the file record to read stocks and week from
+   * @param stockFileRecord the file record to read stocks and tick from
    * @param settings        game settings supplying volatility, drift bias, and seed
    */
   public ExchangeService(String name, StockFileRecord stockFileRecord, GameSettings settings) {
     this(new Exchange(name,
-            stockFileRecord.getWeek() == -1 ? 1 : stockFileRecord.getWeek(),
+            stockFileRecord.getTick() == -1L ? 0L : stockFileRecord.getTick(),
             stockFileRecord.getStocks()),
         new PriceModel(),
         new MarketContext(settings, new Random(settings.randomSeed()), 0.0, 0.0));
@@ -78,8 +81,7 @@ public class ExchangeService {
    * Creates a service wrapping the given exchange, intended for test use.
    *
    * <p>Uses a default {@link PriceModel} and a deterministic
-   * {@link MarketContext} seeded with {@code 0} and NORMAL difficulty
-   * settings.
+   * {@link MarketContext} seeded with {@code 0} and NORMAL difficulty settings.
    *
    * @param exchange the exchange to operate on
    * @return a new service ready for testing
@@ -115,29 +117,35 @@ public class ExchangeService {
   }
 
   /**
-   * Returns the top gainers sorted by latest price change, descending.
+   * Returns the top gainers by skip price change, descending.
+   *
+   * <p>Uses {@link Stock#getSkipPriceChange()} so the sidebar reflects the
+   * full movement across the most recent skip rather than just the last tick.
    *
    * @param limit maximum results
    * @return top gaining stocks
    */
   public List<Stock> getGainers(int limit) {
     return exchange.getStocks().stream()
-        .filter(s -> s.getLatestPriceChange().signum() > 0)
-        .sorted(Comparator.comparing(Stock::getLatestPriceChange).reversed())
+        .filter(s -> s.getSkipPriceChange().signum() > 0)
+        .sorted(Comparator.comparing(Stock::getSkipPriceChange).reversed())
         .limit(limit)
         .toList();
   }
 
   /**
-   * Returns the worst losers sorted by latest price change, ascending.
+   * Returns the worst losers by skip price change, ascending.
+   *
+   * <p>Uses {@link Stock#getSkipPriceChange()} so the sidebar reflects the
+   * full movement across the most recent skip rather than just the last tick.
    *
    * @param limit maximum results
    * @return worst losing stocks
    */
   public List<Stock> getLosers(int limit) {
     return exchange.getStocks().stream()
-        .filter(s -> s.getLatestPriceChange().signum() < 0)
-        .sorted(Comparator.comparing(Stock::getLatestPriceChange))
+        .filter(s -> s.getSkipPriceChange().signum() < 0)
+        .sorted(Comparator.comparing(Stock::getSkipPriceChange))
         .limit(limit)
         .toList();
   }
@@ -154,7 +162,7 @@ public class ExchangeService {
   public Transaction buy(String symbol, BigDecimal quantity, Player player) {
     Stock stock = exchange.getStock(symbol);
     Share share = new Share(stock, quantity, stock.getSalesPrice());
-    Transaction transaction = TransactionFactory.createPurchase(share, exchange.getWeek());
+    Transaction transaction = TransactionFactory.createPurchase(share, exchange.getTickCount());
     transaction.commit(player);
     exchange.notifyObservers(GameEvent.STOCK_PURCHASED);
     return transaction;
@@ -186,10 +194,9 @@ public class ExchangeService {
         .orElseThrow(() -> new IllegalArgumentException(
             "Player does not have this share in their portfolio."));
 
-    // Build a share for exactly the quantity being sold, at the held avg price
     Share shareToSell = new Share(heldShare.stock(), quantityToSell, heldShare.purchasePrice());
 
-    Transaction transaction = TransactionFactory.createSale(shareToSell, exchange.getWeek());
+    Transaction transaction = TransactionFactory.createSale(shareToSell, exchange.getTickCount());
 
     // Manually commit: bypass Sale.commit()'s contains() check since shareToSell
     // is a new object. We own the pre-flight checks here in the service.
@@ -203,15 +210,18 @@ public class ExchangeService {
   }
 
   /**
-   * Advances the exchange by one week, updating every stock price via
-   * {@link PriceModel}, then notifies observers.
+   * Advances the exchange by one simulated hour, updating every stock price via
+   * {@link PriceModel}, then notifies observers with {@link GameEvent#HOUR_ADVANCED}.
+   *
+   * <p>Called by {@link ntnu.idatt2003.millions.model.time.GameClock} once per
+   * hour in a skip loop.
    */
-  public void advance() {
+  public void tick() {
     for (Stock stock : exchange.getStocks()) {
       stock.addNewSalesPrice(priceModel.nextPrice(stock, marketContext));
     }
-    exchange.incrementWeek();
-    exchange.notifyObservers(GameEvent.WEEK_ADVANCED);
+    exchange.incrementTick();
+    exchange.notifyObservers(GameEvent.HOUR_ADVANCED);
   }
 
   /**

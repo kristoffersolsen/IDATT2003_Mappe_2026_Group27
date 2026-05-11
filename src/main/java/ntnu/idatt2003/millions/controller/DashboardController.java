@@ -8,6 +8,7 @@ import ntnu.idatt2003.millions.model.Share;
 import ntnu.idatt2003.millions.model.Stock;
 import ntnu.idatt2003.millions.model.observer.GameEvent;
 import ntnu.idatt2003.millions.model.observer.GameObserver;
+import ntnu.idatt2003.millions.model.time.GameTime;
 import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.util.Format;
 import ntnu.idatt2003.millions.view.DashboardView;
@@ -29,6 +30,8 @@ import org.slf4j.LoggerFactory;
 public class DashboardController implements GameObserver {
 
   private static final Logger log = LoggerFactory.getLogger(DashboardController.class);
+
+  private static final int SKIP_FIVE_HOURS = 5;
 
   private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS }
 
@@ -84,7 +87,7 @@ public class DashboardController implements GameObserver {
         this::onStockSelected
     );
 
-    wireAdvanceButton();
+    wireSkipButtons();
     wireEndGameButton();
     wirePortfolioButton();
     wireTransactionsButton();
@@ -99,7 +102,7 @@ public class DashboardController implements GameObserver {
   @Override
   public void onEvent(Object source, GameEvent event) {
     switch (event) {
-      case WEEK_ADVANCED -> {
+      case SKIP_COMPLETED -> {
         marketController.refresh();
         stockDetailController.refresh();
         refresh();
@@ -143,13 +146,18 @@ public class DashboardController implements GameObserver {
     }
   }
 
-  private void wireAdvanceButton() {
-    view.getAdvanceButton().setOnAction(e -> exchangeService.advance());
+  private void wireSkipButtons() {
+    int hoursPerDay = context.settings().hoursPerDay();
+    int hoursPerWeek = hoursPerDay * context.settings().daysPerWeek();
+    view.getSkip1hButton().setOnAction(e -> context.gameClock().advanceBy(1));
+    view.getSkip5hButton().setOnAction(e -> context.gameClock().advanceBy(SKIP_FIVE_HOURS));
+    view.getSkip1dButton().setOnAction(e -> context.gameClock().advanceBy(hoursPerDay));
+    view.getSkip1wButton().setOnAction(e -> context.gameClock().advanceBy(hoursPerWeek));
   }
 
   private void wireEndGameButton() {
     view.getEndGameButton().setOnAction(
-        e -> appController.showEndScreen(player, exchangeService));
+        e -> appController.showEndScreen(player, exchangeService, context));
   }
 
   private void wirePortfolioButton() {
@@ -171,10 +179,11 @@ public class DashboardController implements GameObserver {
   }
 
   private void refresh() {
-    view.setWeek(exchangeService.getExchange().getWeek());
+    GameTime currentTime = context.gameClock().currentTime();
+    view.setTimeLabel(currentTime.format());
     view.updatePlayerInfo(
         player.getName(),
-        player.getStatus(exchangeService.getExchange().getWeek()).getStatus(),
+        player.getStatus(currentTime).getStatus(),
         Format.formatMoney(player.getNetWorth()),
         Format.formatMoney(player.getMoney()),
         Format.formatMoney(player.getPortfolio().getNetWorth()));

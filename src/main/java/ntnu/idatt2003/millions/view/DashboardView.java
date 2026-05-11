@@ -17,7 +17,7 @@ import ntnu.idatt2003.millions.controller.DashboardController;
  *
  * <p>Uses a {@link BorderPane} as the root:
  * <ul>
- *   <li>top    — week indicator and game controls</li>
+ *   <li>top    — game time and skip controls</li>
  *   <li>left   — market sidebar (stock list, search, filters)</li>
  *   <li>center — stock detail, chart, buy/sell form (set via
  *                {@link #setCenterPanel(Node)})</li>
@@ -27,15 +27,17 @@ import ntnu.idatt2003.millions.controller.DashboardController;
  * </ul>
  *
  * <p>Responsible only for constructing and arranging nodes.
- * All event handling is performed by
- * {@link DashboardController}.
+ * All event handling is performed by {@link DashboardController}.
  */
 public class DashboardView {
 
   private final BorderPane root;
 
-  private final Label weekLabel = new Label("Week 1");
-  private final Button advanceButton = new Button("Advance");
+  private final Label timeLabel = new Label("Wk 1 · Mon · 08:00");
+  private final Button skip1hButton = new Button("+1h");
+  private final Button skip5hButton = new Button("+5h");
+  private final Button skip1dButton = new Button("+1d");
+  private final Button skip1wButton = new Button("+1w");
   private final Button endGameButton = new Button("End Game");
 
   private final Label playerNameLabel = new Label();
@@ -84,12 +86,12 @@ public class DashboardView {
   }
 
   /**
-   * Updates the week label in the top bar.
+   * Updates the time label in the top bar.
    *
-   * @param week the current week number
+   * @param label the formatted time string to display
    */
-  public void setWeek(int week) {
-    weekLabel.setText("Week " + week);
+  public void setTimeLabel(String label) {
+    timeLabel.setText(label);
   }
 
   /**
@@ -115,12 +117,14 @@ public class DashboardView {
   }
 
   private HBox buildTopBar() {
-    weekLabel.getStyleClass().addAll("font-white", "font-title");
+    timeLabel.getStyleClass().addAll("font-white", "font-title");
 
     Region spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
 
-    HBox topBar = new HBox(12, weekLabel, advanceButton, endGameButton, spacer);
+    HBox topBar = new HBox(
+        12, timeLabel, spacer, skip1hButton, skip5hButton, skip1dButton, skip1wButton,
+        endGameButton);
     topBar.setAlignment(Pos.CENTER_LEFT);
     topBar.setPadding(new Insets(12, 16, 12, 16));
     topBar.getStyleClass().add("content-dark");
@@ -189,8 +193,20 @@ public class DashboardView {
     return root;
   }
 
-  public Button getAdvanceButton() {
-    return advanceButton;
+  public Button getSkip1hButton() {
+    return skip1hButton;
+  }
+
+  public Button getSkip5hButton() {
+    return skip5hButton;
+  }
+
+  public Button getSkip1dButton() {
+    return skip1dButton;
+  }
+
+  public Button getSkip1wButton() {
+    return skip1wButton;
   }
 
   public Button getEndGameButton() {

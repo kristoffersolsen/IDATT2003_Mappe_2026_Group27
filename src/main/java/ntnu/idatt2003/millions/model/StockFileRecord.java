@@ -11,7 +11,7 @@ public class StockFileRecord {
   private List<Stock> stocks;
   private final File fileName;
   private final String description;
-  private final int week;
+  private final long tick;
 
   /**
    * Constructor with only list of stocks and filename.
@@ -23,7 +23,7 @@ public class StockFileRecord {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = null;
-    this.week = -1;
+    this.tick = -1L;
   }
 
   /**
@@ -37,22 +37,22 @@ public class StockFileRecord {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = description;
-    this.week = -1;
+    this.tick = -1L;
   }
 
   /**
-   * Constructor with description and week number.
+   * Constructor with description and tick count.
    *
    * @param stocks      stocks to read/write
    * @param fileName    file
    * @param description description
-   * @param week        week number
+   * @param tick        simulation tick count
    */
-  public StockFileRecord(List<Stock> stocks, File fileName, String description, int week) {
+  public StockFileRecord(List<Stock> stocks, File fileName, String description, long tick) {
     this.stocks = stocks;
     this.fileName = fileName;
     this.description = description;
-    this.week = week;
+    this.tick = tick;
   }
 
   public List<Stock> getStocks() {
@@ -67,8 +67,13 @@ public class StockFileRecord {
     return this.description;
   }
 
-  public int getWeek() {
-    return this.week;
+  /**
+   * Returns the simulation tick count stored in this record, or {@code -1} if absent.
+   *
+   * @return the tick count, or -1 if not set
+   */
+  public long getTick() {
+    return this.tick;
   }
 
   public void setStocks(List<Stock> stocks) {

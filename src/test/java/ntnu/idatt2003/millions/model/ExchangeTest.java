@@ -1,5 +1,13 @@
 package ntnu.idatt2003.millions.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.util.List;
 import ntnu.idatt2003.millions.model.transaction.Purchase;
 import ntnu.idatt2003.millions.model.transaction.Sale;
 import ntnu.idatt2003.millions.model.transaction.Transaction;
@@ -8,11 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ExchangeService")
 class ExchangeTest {
@@ -28,7 +31,7 @@ class ExchangeTest {
         new Stock("BBB", "Company B", BigDecimal.valueOf(20)),
         new Stock("CCC", "Company C", BigDecimal.valueOf(30))
     );
-    exchange = new Exchange("Exchange A", 1, stocks);
+    exchange = new Exchange("Exchange A", 0L, stocks);
     exchangeService = ExchangeService.forTesting(exchange);
   }
 
@@ -190,26 +193,26 @@ class ExchangeTest {
   }
 
   @Nested
-  @DisplayName("getWeek / advance")
-  class WeekAdvance {
+  @DisplayName("getTickCount / tick")
+  class TickAdvance {
 
     @Test
-    @DisplayName("initial week matches constructor argument")
-    void initialWeek() {
-      assertEquals(1, exchange.getWeek());
+    @DisplayName("initial tick count matches constructor argument")
+    void initialTickCount() {
+      assertEquals(0L, exchange.getTickCount());
     }
 
     @Test
-    @DisplayName("advance increments week by one")
-    void advanceIncrementsWeek() {
-      exchangeService.advance();
-      assertEquals(2, exchange.getWeek());
+    @DisplayName("tick increments tickCount by one")
+    void tickIncrementsTickCount() {
+      exchangeService.tick();
+      assertEquals(1L, exchange.getTickCount());
     }
 
     @Test
-    @DisplayName("advance adds a new price to all stock price histories")
-    void advanceChangesPrices() {
-      exchangeService.advance();
+    @DisplayName("tick adds a new price to all stock price histories")
+    void tickChangesPrices() {
+      exchangeService.tick();
       assertTrue(exchange.getStock("AAA").getHistoricalPrices().size() > 1);
     }
   }

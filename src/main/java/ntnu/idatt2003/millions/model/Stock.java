@@ -17,6 +17,7 @@ public class Stock {
   private final String symbol;
   private final String company;
   private final List<BigDecimal> prices = new ArrayList<>();
+  private BigDecimal priceAtSkipStart;
 
   /**
    * Default stock constructor.
@@ -50,6 +51,31 @@ public class Stock {
    */
   public void addNewSalesPrice(BigDecimal price) {
     this.prices.add(price);
+  }
+
+  /**
+   * Snapshots the current sales price as the baseline for the next skip.
+   *
+   * <p>Called by {@link ntnu.idatt2003.millions.model.time.GameClock} before
+   * the tick loop begins so that {@link #getSkipPriceChange()} reflects the
+   * full change over the skip rather than just the last tick.
+   */
+  public void markSkipStart() {
+    this.priceAtSkipStart = getSalesPrice();
+  }
+
+  /**
+   * Returns the change in price since the last call to {@link #markSkipStart()}.
+   *
+   * <p>Returns {@link BigDecimal#ZERO} if {@link #markSkipStart()} has never been called.
+   *
+   * @return price change over the most recent skip
+   */
+  public BigDecimal getSkipPriceChange() {
+    if (priceAtSkipStart == null) {
+      return BigDecimal.ZERO;
+    }
+    return getSalesPrice().subtract(priceAtSkipStart);
   }
 
   /**

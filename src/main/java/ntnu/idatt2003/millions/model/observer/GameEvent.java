@@ -9,9 +9,14 @@ package ntnu.idatt2003.millions.model.observer;
 public enum GameEvent {
 
   /**
-   * The exchange has advanced to a new week and stock prices have changed.
+   * The exchange has advanced by one simulated hour and stock prices have changed.
    */
-  WEEK_ADVANCED,
+  HOUR_ADVANCED,
+
+  /**
+   * A skip (one or more hours) has completed; all price updates for that skip are done.
+   */
+  SKIP_COMPLETED,
 
   /**
    * A stock was purchased.

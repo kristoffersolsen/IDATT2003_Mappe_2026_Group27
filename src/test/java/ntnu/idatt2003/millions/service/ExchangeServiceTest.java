@@ -1,16 +1,16 @@
 package ntnu.idatt2003.millions.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import java.util.List;
 import ntnu.idatt2003.millions.model.Exchange;
 import ntnu.idatt2003.millions.model.Stock;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("ExchangeService")
 class ExchangeServiceTest {
@@ -27,12 +27,16 @@ class ExchangeServiceTest {
     stockB = new Stock("BBB", "Company B", BigDecimal.valueOf(100));
     stockC = new Stock("CCC", "Company C", BigDecimal.valueOf(100));
 
-    // A gained, B lost, C unchanged
-    stockA.addNewSalesPrice(BigDecimal.valueOf(120)); // +20
-    stockB.addNewSalesPrice(BigDecimal.valueOf(80));  // -20
-    // stockC stays at 100 — change = 0
+    // Simulate a skip: mark skip start, then add new prices
+    stockA.markSkipStart();
+    stockB.markSkipStart();
+    stockC.markSkipStart();
 
-    exchange = new Exchange("Test Exchange", 1, List.of(stockA, stockB, stockC));
+    stockA.addNewSalesPrice(BigDecimal.valueOf(120)); // skip change = +20
+    stockB.addNewSalesPrice(BigDecimal.valueOf(80));  // skip change = -20
+    // stockC: skip change = 0
+
+    exchange = new Exchange("Test Exchange", 0L, List.of(stockA, stockB, stockC));
     exchangeService = ExchangeService.forTesting(exchange);
   }
 
@@ -41,18 +45,19 @@ class ExchangeServiceTest {
   class Gainers {
 
     @Test
-    @DisplayName("returns only stocks with a positive price change")
+    @DisplayName("returns only stocks with a positive skip price change")
     void returnsOnlyPositiveChanges() {
       List<Stock> gainers = exchangeService.getGainers(10);
-      assertTrue(gainers.stream().allMatch(s -> s.getLatestPriceChange().signum() > 0));
+      assertTrue(gainers.stream().allMatch(s -> s.getSkipPriceChange().signum() > 0));
     }
 
     @Test
     @DisplayName("respects the limit parameter")
     void respectsLimit() {
       Stock stockD = new Stock("DDD", "Company D", BigDecimal.valueOf(100));
+      stockD.markSkipStart();
       stockD.addNewSalesPrice(BigDecimal.valueOf(150));
-      Exchange bigExchange = new Exchange("Big", 1,
+      Exchange bigExchange = new Exchange("Big", 0L,
           List.of(stockA, stockB, stockC, stockD));
       ExchangeService bigService = ExchangeService.forTesting(bigExchange);
 
@@ -63,7 +68,7 @@ class ExchangeServiceTest {
     @Test
     @DisplayName("returns empty list when no stocks have gained")
     void emptyWhenNoGainers() {
-      Exchange loserExchange = new Exchange("Losers", 1, List.of(stockB, stockC));
+      Exchange loserExchange = new Exchange("Losers", 0L, List.of(stockB, stockC));
       ExchangeService loserService = ExchangeService.forTesting(loserExchange);
       assertTrue(loserService.getGainers(10).isEmpty());
     }
@@ -72,13 +77,14 @@ class ExchangeServiceTest {
     @DisplayName("gainers are sorted with largest gain first")
     void sortedDescending() {
       Stock bigGainer = new Stock("BIG", "Big Gainer", BigDecimal.valueOf(100));
-      bigGainer.addNewSalesPrice(BigDecimal.valueOf(200)); // +100
-      Exchange sortExchange = new Exchange("Sort", 1, List.of(stockA, bigGainer));
+      bigGainer.markSkipStart();
+      bigGainer.addNewSalesPrice(BigDecimal.valueOf(200)); // skip change = +100
+      Exchange sortExchange = new Exchange("Sort", 0L, List.of(stockA, bigGainer));
       ExchangeService sortService = ExchangeService.forTesting(sortExchange);
 
       List<Stock> gainers = sortService.getGainers(10);
-      assertTrue(gainers.get(0).getLatestPriceChange()
-          .compareTo(gainers.get(1).getLatestPriceChange()) > 0);
+      assertTrue(gainers.get(0).getSkipPriceChange()
+          .compareTo(gainers.get(1).getSkipPriceChange()) > 0);
     }
   }
 
@@ -87,18 +93,19 @@ class ExchangeServiceTest {
   class Losers {
 
     @Test
-    @DisplayName("returns only stocks with a negative price change")
+    @DisplayName("returns only stocks with a negative skip price change")
     void returnsOnlyNegativeChanges() {
       List<Stock> losers = exchangeService.getLosers(10);
-      assertTrue(losers.stream().allMatch(s -> s.getLatestPriceChange().signum() < 0));
+      assertTrue(losers.stream().allMatch(s -> s.getSkipPriceChange().signum() < 0));
     }
 
     @Test
     @DisplayName("respects the limit parameter")
     void respectsLimit() {
       Stock stockE = new Stock("EEE", "Company E", BigDecimal.valueOf(100));
+      stockE.markSkipStart();
       stockE.addNewSalesPrice(BigDecimal.valueOf(50));
-      Exchange bigExchange = new Exchange("Big", 1,
+      Exchange bigExchange = new Exchange("Big", 0L,
           List.of(stockA, stockB, stockC, stockE));
       ExchangeService bigService = ExchangeService.forTesting(bigExchange);
 
@@ -109,7 +116,7 @@ class ExchangeServiceTest {
     @Test
     @DisplayName("returns empty list when no stocks have lost")
     void emptyWhenNoLosers() {
-      Exchange gainerExchange = new Exchange("Gainers", 1, List.of(stockA, stockC));
+      Exchange gainerExchange = new Exchange("Gainers", 0L, List.of(stockA, stockC));
       ExchangeService gainerService = ExchangeService.forTesting(gainerExchange);
       assertTrue(gainerService.getLosers(10).isEmpty());
     }
@@ -118,13 +125,14 @@ class ExchangeServiceTest {
     @DisplayName("losers are sorted with largest loss first")
     void sortedAscending() {
       Stock bigLoser = new Stock("BIG", "Big Loser", BigDecimal.valueOf(100));
-      bigLoser.addNewSalesPrice(BigDecimal.valueOf(10)); // -90
-      Exchange sortExchange = new Exchange("Sort", 1, List.of(stockB, bigLoser));
+      bigLoser.markSkipStart();
+      bigLoser.addNewSalesPrice(BigDecimal.valueOf(10)); // skip change = -90
+      Exchange sortExchange = new Exchange("Sort", 0L, List.of(stockB, bigLoser));
       ExchangeService sortService = ExchangeService.forTesting(sortExchange);
 
       List<Stock> losers = sortService.getLosers(10);
-      assertTrue(losers.get(0).getLatestPriceChange()
-          .compareTo(losers.get(1).getLatestPriceChange()) < 0);
+      assertTrue(losers.get(0).getSkipPriceChange()
+          .compareTo(losers.get(1).getSkipPriceChange()) < 0);
     }
   }
 

@@ -1,11 +1,9 @@
 package ntnu.idatt2003.millions.service;
 
-import ntnu.idatt2003.millions.model.Stock;
-import ntnu.idatt2003.millions.model.StockFileRecord;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,8 +11,12 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import ntnu.idatt2003.millions.model.Stock;
+import ntnu.idatt2003.millions.model.StockFileRecord;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @DisplayName("StockFileService")
 class StockFileServiceTest {
@@ -101,13 +103,13 @@ class StockFileServiceTest {
     }
 
     @Test
-    @DisplayName("week number is stored and retrieved correctly")
-    void weekRoundTrip() throws IOException {
-      File file = tempFile("meta_week.csv");
+    @DisplayName("tick count is stored and retrieved correctly")
+    void tickRoundTrip() throws IOException {
+      File file = tempFile("meta_tick.csv");
       StockFileService.writeStocks(
-          new StockFileRecord(sampleStocks(), file, "Desc", 42));
+          new StockFileRecord(sampleStocks(), file, "Desc", 42L));
       StockFileRecord record = StockFileService.readStocks(file);
-      assertEquals(42, record.getWeek());
+      assertEquals(42L, record.getTick());
     }
 
     @Test
@@ -121,24 +123,24 @@ class StockFileServiceTest {
     }
 
     @Test
-    @DisplayName("file without week has week == -1")
-    void noWeekIsMinusOne() throws IOException {
-      File file = tempFile("meta_noweek.csv");
+    @DisplayName("file without tick has tick == -1")
+    void noTickIsMinusOne() throws IOException {
+      File file = tempFile("meta_notick.csv");
       StockFileService.writeStocks(
           new StockFileRecord(sampleStocks(), file));
       StockFileRecord record = StockFileService.readStocks(file);
-      assertEquals(-1, record.getWeek());
+      assertEquals(-1L, record.getTick());
     }
 
     @Test
-    @DisplayName("both description and week survive a round-trip together")
+    @DisplayName("both description and tick survive a round-trip together")
     void fullMetadataRoundTrip() throws IOException {
       File file = tempFile("meta_full.csv");
       StockFileService.writeStocks(
-          new StockFileRecord(sampleStocks(), file, "Full meta", 7));
+          new StockFileRecord(sampleStocks(), file, "Full meta", 7L));
       StockFileRecord record = StockFileService.readStocks(file);
       assertEquals("Full meta", record.getDescription());
-      assertEquals(7, record.getWeek());
+      assertEquals(7L, record.getTick());
     }
   }
 

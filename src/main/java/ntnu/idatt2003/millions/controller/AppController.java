@@ -3,6 +3,7 @@ package ntnu.idatt2003.millions.controller;
 import javafx.stage.Stage;
 import ntnu.idatt2003.millions.config.GameContext;
 import ntnu.idatt2003.millions.model.Player;
+import ntnu.idatt2003.millions.model.time.GameTime;
 import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.util.Format;
 import ntnu.idatt2003.millions.view.DashboardView;
@@ -58,17 +59,19 @@ public class AppController {
    *
    * @param player          the player whose session ended
    * @param exchangeService the exchange service at game end
+   * @param context         the game context for this session
    */
-  public void showEndScreen(Player player, ExchangeService exchangeService) {
+  public void showEndScreen(Player player, ExchangeService exchangeService, GameContext context) {
     disposeDashboard();
     EndView endView = new EndView();
     new EndController(endView, this);
 
+    GameTime finalTime = context.gameClock().currentTime();
     endView.populate(
         player.getName(),
         Format.formatMoney(player.getStartingMoney()),
         Format.formatMoney(player.getNetWorth()),
-        player.getStatus(exchangeService.getExchange().getWeek()).getStatus());
+        player.getStatus(finalTime).getStatus());
 
     stage.getScene().setRoot(endView.getRoot());
     stage.setTitle("Millions — Game Over");
