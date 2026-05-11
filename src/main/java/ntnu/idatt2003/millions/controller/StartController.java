@@ -10,6 +10,7 @@ import ntnu.idatt2003.millions.config.GameDefaults;
 import ntnu.idatt2003.millions.config.GameSettings;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.StockFileRecord;
+import ntnu.idatt2003.millions.model.time.GameClock;
 import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.service.StockFileService;
 import ntnu.idatt2003.millions.view.StartView;
@@ -94,11 +95,18 @@ public class StartController {
 
     Difficulty difficulty = view.getDifficulty();
     GameSettings settings = GameDefaults.forDifficulty(difficulty);
-    GameContext context = new GameContext(
-        settings, new Random(settings.randomSeed()), null, null, null, null);
 
     Player player = new Player(name, capital);
     ExchangeService exchangeService = new ExchangeService("Main Exchange", stockFile, settings);
+
+    GameClock clock = new GameClock(exchangeService, settings);
+    GameContext context = new GameContext(
+        settings,
+        new Random(settings.randomSeed()),
+        clock,
+        clock.currentTime(),
+        null,
+        null);
 
     appController.startGame(player, exchangeService, context);
   }

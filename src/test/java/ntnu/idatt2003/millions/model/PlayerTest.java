@@ -1,22 +1,36 @@
 package ntnu.idatt2003.millions.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
+import ntnu.idatt2003.millions.config.Difficulty;
+import ntnu.idatt2003.millions.config.GameDefaults;
+import ntnu.idatt2003.millions.config.GameSettings;
+import ntnu.idatt2003.millions.model.time.GameTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 @DisplayName("Player")
 class PlayerTest {
+
+  private static final GameSettings SETTINGS = GameDefaults.forDifficulty(Difficulty.NORMAL);
 
   private Player player;
 
   @BeforeEach
   void setUp() {
     player = new Player("Player", BigDecimal.valueOf(1000));
+  }
+
+  /** Creates a GameTime that reports the given week number (1-based). */
+  private static GameTime atWeek(int week) {
+    long ticksPerWeek = (long) SETTINGS.hoursPerDay() * SETTINGS.daysPerWeek();
+    return new GameTime(SETTINGS, (long) (week - 1) * ticksPerWeek);
   }
 
   @Test
@@ -108,7 +122,6 @@ class PlayerTest {
       Stock stock = new Stock("AAA", "Company A", BigDecimal.valueOf(100));
       Share share = new Share(stock, BigDecimal.valueOf(1), BigDecimal.valueOf(80));
       player.getPortfolio().addShare(share);
-      // net worth > cash because portfolio has value
       assertTrue(player.getNetWorth().compareTo(player.getMoney()) > 0);
     }
   }
@@ -120,24 +133,22 @@ class PlayerTest {
     @Test
     @DisplayName("returns NOVICE/INVESTOR for early weeks")
     void earlyWeeksNotSpeculator() {
-      Status status = player.getStatus(1);
+      Status status = player.getStatus(atWeek(1));
       assertNotEquals(Status.SPECULATOR, status);
     }
 
     @Test
     @DisplayName("returns SPECULATOR when week>=20 and net worth doubled")
     void speculatorWhenConditionsMet() {
-      // Double the player's net worth
       player.addMoney(BigDecimal.valueOf(1000));
-      Status status = player.getStatus(20);
+      Status status = player.getStatus(atWeek(20));
       assertEquals(Status.SPECULATOR, status);
     }
 
     @Test
     @DisplayName("does not return SPECULATOR when wealth threshold not met at week 20")
     void notSpeculatorWhenWealthInsufficientAtWeek20() {
-      Status status = player.getStatus(20);
-      // 1000 < 2000 (2x starting), so not SPECULATOR
+      Status status = player.getStatus(atWeek(20));
       assertNotEquals(Status.SPECULATOR, status);
     }
 
@@ -145,7 +156,7 @@ class PlayerTest {
     @DisplayName("does not return SPECULATOR before week 20 even if wealthy")
     void notSpeculatorBeforeWeek20() {
       player.addMoney(BigDecimal.valueOf(5000));
-      Status status = player.getStatus(19);
+      Status status = player.getStatus(atWeek(19));
       assertNotEquals(Status.SPECULATOR, status);
     }
   }

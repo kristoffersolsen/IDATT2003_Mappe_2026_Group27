@@ -65,10 +65,10 @@ public class StockDetailController {
       return;
     }
 
-    // Week 1 is the first price entry; offset = currentWeek - historySize + 1
+    // Tick 0 is the first price entry; compute display offset from tick count
     int historySize = currentStock.getHistoricalPrices().size();
-    int currentWeek = exchangeService.getExchange().getWeek();
-    int startWeek = Math.max(1, currentWeek - historySize + 1);
+    long currentTick = exchangeService.getExchange().getTickCount();
+    int startWeek = (int) Math.max(1, currentTick - historySize + 1);
 
     view.setStock(currentStock, startWeek);
 

@@ -1,28 +1,36 @@
 package ntnu.idatt2003.millions.model.transaction;
 
-import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Share;
+import ntnu.idatt2003.millions.service.ExchangeService;
 
 /**
- * Abstract class for all transactions
+ * Abstract class for all transactions.
  */
 public abstract class Transaction {
+
+  /**
+   * Number of simulation ticks in one trading week (8 h/day × 5 days/week).
+   *
+   * <p>Used by {@link #getWeek()} to derive a display week from the stored tick.
+   */
+  private static final int TICKS_PER_WEEK = 40;
+
   protected Share share;
-  protected int week;
+  protected long tick;
   protected TransactionCalculator calculator;
   protected boolean committed = false;
 
   /**
    * Constructor.
    *
-   * @param share      The share that is transacted
-   * @param week       The week of the transaction
-   * @param calculator The calculator to use
+   * @param share      the share that is transacted
+   * @param tick       the simulation tick at the time of the transaction
+   * @param calculator the calculator to use
    */
-  Transaction(Share share, int week, TransactionCalculator calculator) {
+  Transaction(Share share, long tick, TransactionCalculator calculator) {
     this.share = share;
-    this.week = week;
+    this.tick = tick;
     this.calculator = calculator;
   }
 
@@ -30,8 +38,24 @@ public abstract class Transaction {
     return share;
   }
 
+  /**
+   * Returns the simulation tick at which this transaction was created.
+   *
+   * @return the tick
+   */
+  public long getTick() {
+    return tick;
+  }
+
+  /**
+   * Returns the trading week derived from the stored tick for display purposes.
+   *
+   * <p>Computed as {@code tick / TICKS_PER_WEEK + 1} so that tick 0 is week 1.
+   *
+   * @return the derived week number (1-based)
+   */
   public int getWeek() {
-    return week;
+    return (int) (tick / TICKS_PER_WEEK) + 1;
   }
 
   public TransactionCalculator getCalculator() {

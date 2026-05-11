@@ -1,5 +1,10 @@
 package ntnu.idatt2003.millions.model.transaction;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.math.BigDecimal;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Share;
 import ntnu.idatt2003.millions.model.Stock;
@@ -7,10 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Sale")
 class SaleTest {
@@ -34,7 +35,7 @@ class SaleTest {
     @Test
     @DisplayName("isCommitted is true after a valid commit")
     void isCommittedAfterCommit() {
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       sale.commit(player);
       assertTrue(sale.isCommitted());
     }
@@ -42,17 +43,17 @@ class SaleTest {
     @Test
     @DisplayName("player receives money equal to calculateTotal()")
     void playerReceivesMoney() {
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       BigDecimal before = player.getMoney();
       sale.commit(player);
       BigDecimal expected = before.add(sale.getCalculator().calculateTotal());
-      assertEquals(0, expected.compareTo(player.getMoney()));
+      org.junit.jupiter.api.Assertions.assertEquals(0, expected.compareTo(player.getMoney()));
     }
 
     @Test
     @DisplayName("share is removed from player's portfolio after commit")
     void shareRemovedFromPortfolio() {
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       sale.commit(player);
       assertFalse(player.getPortfolio().contains(share));
     }
@@ -60,7 +61,7 @@ class SaleTest {
     @Test
     @DisplayName("transaction is recorded in player's archive")
     void transactionAddedToArchive() {
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       sale.commit(player);
       assertTrue(player.getTransactionArchive().getTransactions().contains(sale));
     }
@@ -74,7 +75,7 @@ class SaleTest {
     @DisplayName("throws when player does not own the share")
     void throwsWhenShareNotOwned() {
       Player stranger = new Player("Player B", BigDecimal.valueOf(100));
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       assertThrows(IllegalArgumentException.class, () -> sale.commit(stranger));
     }
 
@@ -83,17 +84,16 @@ class SaleTest {
     void balanceUnchangedAfterFailure() {
       Player stranger = new Player("Player B", BigDecimal.valueOf(100));
       BigDecimal before = stranger.getMoney();
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       assertThrows(IllegalArgumentException.class, () -> sale.commit(stranger));
-      assertEquals(0, before.compareTo(stranger.getMoney()));
+      org.junit.jupiter.api.Assertions.assertEquals(0, before.compareTo(stranger.getMoney()));
     }
 
     @Test
     @DisplayName("throws when same sale is committed twice")
     void throwsOnDoubleCommit() {
-      Sale sale = new Sale(share, 1);
+      Sale sale = new Sale(share, 1L);
       sale.commit(player);
-      // Re-add the share so the second commit doesn't fail for the wrong reason
       player.getPortfolio().addShare(share);
       assertThrows(IllegalArgumentException.class, () -> sale.commit(player));
     }

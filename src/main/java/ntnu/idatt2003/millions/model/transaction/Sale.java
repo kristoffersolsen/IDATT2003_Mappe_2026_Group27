@@ -1,9 +1,9 @@
 package ntnu.idatt2003.millions.model.transaction;
 
 import java.math.BigDecimal;
-import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Share;
+import ntnu.idatt2003.millions.service.ExchangeService;
 
 /**
  * A sale transaction.
@@ -22,10 +22,10 @@ public class Sale extends Transaction {
    * Constructor.
    *
    * @param share the share to transact
-   * @param week  week of transaction
+   * @param tick  the simulation tick at the time of the transaction
    */
-  public Sale(Share share, int week) {
-    super(share, week, new SaleCalculator(share));
+  public Sale(Share share, long tick) {
+    super(share, tick, new SaleCalculator(share));
 
     this.salePrice = share.stock().getSalesPrice();
 

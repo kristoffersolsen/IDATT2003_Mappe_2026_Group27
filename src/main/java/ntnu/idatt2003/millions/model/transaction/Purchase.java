@@ -4,18 +4,18 @@ import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Share;
 
 /**
- * A purchase transaction
+ * A purchase transaction.
  */
 public class Purchase extends Transaction {
 
   /**
    * Constructor.
    *
-   * @param share The share to transact
-   * @param week  The Week of transaction
+   * @param share the share to transact
+   * @param tick  the simulation tick at the time of the transaction
    */
-  public Purchase(Share share, int week) {
-    super(share, week, new PurchaseCalculator(share));
+  public Purchase(Share share, long tick) {
+    super(share, tick, new PurchaseCalculator(share));
 
   }
 

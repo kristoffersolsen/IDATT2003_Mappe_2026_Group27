@@ -3,12 +3,16 @@ package ntnu.idatt2003.millions.model;
 import java.math.BigDecimal;
 import ntnu.idatt2003.millions.model.observer.GameEvent;
 import ntnu.idatt2003.millions.model.observer.Observable;
+import ntnu.idatt2003.millions.model.time.GameTime;
 import ntnu.idatt2003.millions.model.transaction.TransactionArchive;
 
 /**
  * Player class that represents a player.
  */
 public class Player extends Observable {
+
+  private static final StatusEvaluator STATUS_EVALUATOR = new StatusEvaluator();
+
   private final String name;
   private final BigDecimal startingMoney;
   private BigDecimal money;
@@ -79,19 +83,15 @@ public class Player extends Observable {
   }
 
   /**
-   * Checks the week and net-worth growth to determine player status.
+   * Determines the player's current status tier for the given game time.
    *
-   * @param week the current week
+   * <p>Delegates to {@link StatusEvaluator} so that the same logic can be
+   * reused for non-player entities in future versions.
+   *
+   * @param time the current game time
    * @return the highest {@link Status} tier the player qualifies for
    */
-  public Status getStatus(int week) {
-    BigDecimal netWorth = getNetWorth();
-    Status[] values = Status.values();
-    for (int i = values.length - 1; i > 0; i--) {
-      if (values[i].qualifies(week, startingMoney, netWorth)) {
-        return values[i];
-      }
-    }
-    return Status.NOVICE;
+  public Status getStatus(GameTime time) {
+    return STATUS_EVALUATOR.evaluate(startingMoney, getNetWorth(), time);
   }
 }
