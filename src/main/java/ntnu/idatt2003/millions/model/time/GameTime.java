@@ -83,4 +83,16 @@ public class GameTime {
     int clockHour = TRADING_DAY_START_HOUR + getHour();
     return String.format("Wk %d · %s · %02d:00", getWeek(), dayName, clockHour);
   }
+
+  /**
+   * Returns a short human-readable label showing only week and day.
+   *
+   * <p>Format: {@code "Wk N · Mon"}, e.g. {@code "Wk 3 · Wed"}.
+   *
+   * @return short date string
+   */
+  public String formatDate() {
+    String dayName = DAY_NAMES[(getDay() - 1) % DAY_NAMES.length];
+    return String.format("Wk %d · %s", getWeek(), dayName);
+  }
 }

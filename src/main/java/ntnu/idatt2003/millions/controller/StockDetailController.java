@@ -1,6 +1,7 @@
 package ntnu.idatt2003.millions.controller;
 
 import java.util.List;
+import ntnu.idatt2003.millions.config.GameSettings;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Stock;
 import ntnu.idatt2003.millions.model.transaction.Transaction;
@@ -28,15 +29,18 @@ public class StockDetailController {
    * @param view            the stock detail view
    * @param exchangeService the exchange service to execute trades on
    * @param player          the active player
+   * @param settings        game settings for chart zoom calculations
    */
   public StockDetailController(
       StockDetailView view,
       ExchangeService exchangeService,
-      Player player) {
+      Player player,
+      GameSettings settings) {
     this.view = view;
     this.exchangeService = exchangeService;
     this.player = player;
-    this.chartController = new StockPriceChartController(view.getChartView(), exchangeService);
+    this.chartController = new StockPriceChartController(
+        view.getChartView(), exchangeService, settings);
 
     wireBuyButton();
     wireQuantitySpinner();
@@ -53,6 +57,7 @@ public class StockDetailController {
   public void showStock(Stock stock) {
     this.currentStock = stock;
     view.showBuyError(null);
+    chartController.showStock(stock);
     refresh();
   }
 

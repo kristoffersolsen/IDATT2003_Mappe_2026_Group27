@@ -76,7 +76,7 @@ public class DashboardController implements GameObserver {
     StockDetailView stockDetailView = new StockDetailView();
     view.setCenterPanel(stockDetailView);
     this.stockDetailController = new StockDetailController(
-        stockDetailView, exchangeService, player);
+        stockDetailView, exchangeService, player, context.settings());
 
     exchangeService.getExchange().addObserver(this);
     player.addObserver(this);
