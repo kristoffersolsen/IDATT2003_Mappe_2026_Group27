@@ -36,5 +36,20 @@ public enum GameEvent {
   /**
    * The player's portfolio composition has changed.
    */
-  PORTFOLIO_CHANGED
+  PORTFOLIO_CHANGED,
+
+  /**
+   * A limit order was placed and its cash (for buys) reserved.
+   */
+  LIMIT_ORDER_PLACED,
+
+  /**
+   * A pending limit order triggered and was executed against the market.
+   */
+  LIMIT_ORDER_EXECUTED,
+
+  /**
+   * A pending limit order was cancelled and its reserved cash refunded.
+   */
+  LIMIT_ORDER_CANCELLED
 }

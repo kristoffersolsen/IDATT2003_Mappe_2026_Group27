@@ -1,0 +1,5 @@
+/* ---- Pending order rows ---- */
+.order-card {
+    -fx-background-color: #3c3c3c;
+    -fx-background-radius: 6px;
+}

@@ -8,11 +8,13 @@ import ntnu.idatt2003.millions.model.Share;
 import ntnu.idatt2003.millions.model.Stock;
 import ntnu.idatt2003.millions.model.observer.GameEvent;
 import ntnu.idatt2003.millions.model.observer.GameObserver;
+import ntnu.idatt2003.millions.model.order.LimitOrder;
 import ntnu.idatt2003.millions.model.time.GameTime;
 import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.util.Format;
 import ntnu.idatt2003.millions.view.DashboardView;
 import ntnu.idatt2003.millions.view.ErrorDialog;
+import ntnu.idatt2003.millions.view.OrdersPanel;
 import ntnu.idatt2003.millions.view.PortfolioPanel;
 import ntnu.idatt2003.millions.view.StockDetailView;
 import ntnu.idatt2003.millions.view.TransactionsPanel;
@@ -33,7 +35,7 @@ public class DashboardController implements GameObserver {
 
   private static final int SKIP_FIVE_HOURS = 5;
 
-  private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS }
+  private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS, ORDERS }
 
   private final DashboardView view;
   private final Player player;
@@ -46,6 +48,7 @@ public class DashboardController implements GameObserver {
 
   private final PortfolioPanel portfolioPanel;
   private final TransactionsPanel transactionsPanel;
+  private final OrdersPanel ordersPanel;
 
   private RightPanel currentRightPanel = RightPanel.NONE;
 
@@ -72,11 +75,12 @@ public class DashboardController implements GameObserver {
 
     this.portfolioPanel = new PortfolioPanel(this::onSellShare);
     this.transactionsPanel = new TransactionsPanel();
+    this.ordersPanel = new OrdersPanel(this::onCancelOrder);
 
     StockDetailView stockDetailView = new StockDetailView();
     view.setCenterPanel(stockDetailView);
     this.stockDetailController = new StockDetailController(
-        stockDetailView, exchangeService, player, context.settings());
+        stockDetailView, exchangeService, player, context);
 
     exchangeService.getExchange().addObserver(this);
     player.addObserver(this);
@@ -91,6 +95,7 @@ public class DashboardController implements GameObserver {
     wireEndGameButton();
     wirePortfolioButton();
     wireTransactionsButton();
+    wireOrdersButton();
 
     exchangeService.getExchange().getStocks().stream()
         .findFirst()
@@ -108,6 +113,11 @@ public class DashboardController implements GameObserver {
         refresh();
       }
       case STOCK_PURCHASED, STOCK_SOLD, BALANCE_CHANGED, PORTFOLIO_CHANGED -> {
+        stockDetailController.refresh();
+        refresh();
+      }
+      case LIMIT_ORDER_PLACED, LIMIT_ORDER_CANCELLED -> refresh();
+      case LIMIT_ORDER_EXECUTED -> {
         stockDetailController.refresh();
         refresh();
       }
@@ -146,6 +156,18 @@ public class DashboardController implements GameObserver {
     }
   }
 
+  private void onCancelOrder(LimitOrder order) {
+    if (context.orderService() == null) {
+      return;
+    }
+    try {
+      context.orderService().cancelLimitOrder(player, order);
+    } catch (IllegalArgumentException e) {
+      log.error("Cancel order failed", e);
+      ErrorDialog.show("Cancel failed", e.getMessage());
+    }
+  }
+
   private void wireSkipButtons() {
     int hoursPerDay = context.settings().hoursPerDay();
     int hoursPerWeek = hoursPerDay * context.settings().daysPerWeek();
@@ -168,12 +190,21 @@ public class DashboardController implements GameObserver {
     view.getTransactionsButton().setOnAction(e -> toggleRightPanel(RightPanel.TRANSACTIONS));
   }
 
+  private void wireOrdersButton() {
+    view.getOrdersButton().setOnAction(e -> toggleRightPanel(RightPanel.ORDERS));
+  }
+
   private void toggleRightPanel(RightPanel panel) {
     if (currentRightPanel == panel) {
       view.setRightPanel(null);
       currentRightPanel = RightPanel.NONE;
     } else {
-      view.setRightPanel(panel == RightPanel.PORTFOLIO ? portfolioPanel : transactionsPanel);
+      view.setRightPanel(switch (panel) {
+        case PORTFOLIO -> portfolioPanel;
+        case TRANSACTIONS -> transactionsPanel;
+        case ORDERS -> ordersPanel;
+        default -> null;
+      });
       currentRightPanel = panel;
     }
   }
@@ -191,5 +222,9 @@ public class DashboardController implements GameObserver {
     portfolioPanel.setShares(player.getPortfolio().getShares());
     transactionsPanel.setTransactions(
         player.getTransactionArchive().getTransactions());
+
+    if (context.orderService() != null) {
+      ordersPanel.setOrders(context.orderService().getPendingOrders(player));
+    }
   }
 }

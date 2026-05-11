@@ -48,6 +48,7 @@ public class DashboardView {
 
   private final Button portfolioButton = new Button("Portfolio Details");
   private final Button transactionsButton = new Button("Recent Transactions");
+  private final Button ordersButton = new Button("Pending Orders");
 
   private final MarketView marketView = new MarketView();
 
@@ -186,7 +187,8 @@ public class DashboardView {
   private VBox buildButtonsSection() {
     portfolioButton.setPrefWidth(180);
     transactionsButton.setPrefWidth(180);
-    return new VBox(8, portfolioButton, transactionsButton);
+    ordersButton.setPrefWidth(180);
+    return new VBox(8, portfolioButton, transactionsButton, ordersButton);
   }
 
   public BorderPane getRoot() {
@@ -219,6 +221,10 @@ public class DashboardView {
 
   public Button getTransactionsButton() {
     return transactionsButton;
+  }
+
+  public Button getOrdersButton() {
+    return ordersButton;
   }
 
   public MarketView getMarketView() {

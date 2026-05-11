@@ -36,6 +36,7 @@ public class Main extends Application {
         "/css/dashboard.css",
         "/css/portfolio.css",
         "/css/transactions.css",
+        "/css/orders.css",
         "/css/start-end.css"
     };
     for (String cssFile : cssFiles) {
