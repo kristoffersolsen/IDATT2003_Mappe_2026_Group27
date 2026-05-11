@@ -41,6 +41,36 @@
 }
 .stock-price-label { -fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #222222; }
 
+/* ---- Chart toolbar ---- */
+.chart-toolbar {
+    -fx-background-color: #d0d0d0;
+    -fx-border-color: #cccccc;
+    -fx-border-width: 0 0 1 0;
+}
+.chart-context-label { -fx-text-fill: #555555; }
+.chart-nav-button {
+    -fx-background-color: #c8c8c8;
+    -fx-text-fill: #222222;
+    -fx-font-size: 14px;
+    -fx-padding: 2 8 2 8;
+    -fx-background-radius: 4px;
+    -fx-min-width: 26px;
+    -fx-cursor: hand;
+}
+.chart-nav-button:hover    { -fx-background-color: #b0b0b0; }
+.chart-nav-button:disabled { -fx-opacity: 0.35; }
+.chart-zoom-button {
+    -fx-background-color: #c8c8c8;
+    -fx-text-fill: #333333;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+}
+.chart-zoom-button:hover         { -fx-background-color: #b5b5b5; }
+.chart-zoom-button-active        { -fx-background-color: #444444; -fx-text-fill: white; }
+.chart-zoom-button-active:hover  { -fx-background-color: #333333; }
+
 .stock-chart { -fx-background-color: transparent; }
 .stock-chart .chart-plot-background   { -fx-background-color: #e0e0e0; }
 .stock-chart .chart-series-line       { -fx-stroke: #1976d2; -fx-stroke-width: 2px; }

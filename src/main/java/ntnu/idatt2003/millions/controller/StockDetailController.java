@@ -1,6 +1,7 @@
 package ntnu.idatt2003.millions.controller;
 
 import java.util.List;
+import ntnu.idatt2003.millions.config.GameSettings;
 import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.Stock;
 import ntnu.idatt2003.millions.model.transaction.Transaction;
@@ -16,6 +17,7 @@ import ntnu.idatt2003.millions.view.StockDetailView;
 public class StockDetailController {
 
   private final StockDetailView view;
+  private final StockPriceChartController chartController;
   private final ExchangeService exchangeService;
   private final Player player;
 
@@ -27,14 +29,18 @@ public class StockDetailController {
    * @param view            the stock detail view
    * @param exchangeService the exchange service to execute trades on
    * @param player          the active player
+   * @param settings        game settings for chart zoom calculations
    */
   public StockDetailController(
       StockDetailView view,
       ExchangeService exchangeService,
-      Player player) {
+      Player player,
+      GameSettings settings) {
     this.view = view;
     this.exchangeService = exchangeService;
     this.player = player;
+    this.chartController = new StockPriceChartController(
+        view.getChartView(), exchangeService, settings);
 
     wireBuyButton();
     wireQuantitySpinner();
@@ -51,6 +57,7 @@ public class StockDetailController {
   public void showStock(Stock stock) {
     this.currentStock = stock;
     view.showBuyError(null);
+    chartController.showStock(stock);
     refresh();
   }
 
@@ -65,12 +72,8 @@ public class StockDetailController {
       return;
     }
 
-    // Tick 0 is the first price entry; compute display offset from tick count
-    int historySize = currentStock.getHistoricalPrices().size();
-    long currentTick = exchangeService.getExchange().getTickCount();
-    int startWeek = (int) Math.max(1, currentTick - historySize + 1);
-
-    view.setStock(currentStock, startWeek);
+    view.setStock(currentStock);
+    chartController.refresh(currentStock);
 
     // Filter the full archive to only this stock's symbol
     List<Transaction> stockTx = player.getTransactionArchive()
