@@ -5,9 +5,6 @@ import java.util.List;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -45,9 +42,7 @@ public class StockDetailView extends VBox {
   private final Button lowestPriceButton = new Button();
 
   // ---- Chart ----
-  private final NumberAxis xAxis = new NumberAxis();
-  private final NumberAxis yAxis = new NumberAxis();
-  private final LineChart<Number, Number> chart = new LineChart<>(xAxis, yAxis);
+  private final StockPriceChartView chartView = new StockPriceChartView();
 
   // ---- Buy form ----
   private final Spinner<Integer> quantitySpinner =
@@ -64,13 +59,12 @@ public class StockDetailView extends VBox {
    */
   public StockDetailView() {
     buildHeader();
-    buildChart();
     VBox bottomSection = buildBottomSection();
 
     setSpacing(0);
     getStyleClass().add("content-light-grey");
-    getChildren().addAll(buildHeaderBox(), chart, bottomSection);
-    VBox.setVgrow(chart, Priority.ALWAYS);
+    getChildren().addAll(buildHeaderBox(), chartView, bottomSection);
+    VBox.setVgrow(chartView, Priority.ALWAYS);
   }
 
   private void buildHeader() {
@@ -101,19 +95,6 @@ public class StockDetailView extends VBox {
     header.setPadding(new Insets(16, 16, 12, 16));
     header.getStyleClass().add("stock-header");
     return header;
-  }
-
-  private void buildChart() {
-    xAxis.setLabel("Week");
-    xAxis.setTickLabelFill(javafx.scene.paint.Color.web("#555555"));
-    yAxis.setLabel("Price ($)");
-    yAxis.setTickLabelFill(javafx.scene.paint.Color.web("#555555"));
-
-    chart.setLegendVisible(false);
-    chart.setAnimated(false);
-    chart.setCreateSymbols(true);
-    chart.setPadding(new Insets(8, 16, 0, 8));
-    chart.getStyleClass().add("stock-chart");
   }
 
   private VBox buildBottomSection() {
@@ -171,12 +152,14 @@ public class StockDetailView extends VBox {
   }
 
   /**
-   * Populates all header and chart data for the given stock.
+   * Populates all header data for the given stock.
    *
-   * @param stock     the stock to display
-   * @param startWeek the week number of the first price entry
+   * <p>Chart updates are handled separately by {@link
+   * ntnu.idatt2003.millions.controller.StockPriceChartController}.
+   *
+   * @param stock the stock to display
    */
-  public void setStock(Stock stock, int startWeek) {
+  public void setStock(Stock stock) {
     symbolLabel.setText(stock.getSymbol());
     companyLabel.setText(stock.getCompany());
     priceLabel.setText("$" + Format.formatMoney(stock.getSalesPrice()));
@@ -192,7 +175,6 @@ public class StockDetailView extends VBox {
     highestPriceButton.setText("Highest Price\n$" + Format.formatMoney(stock.getHighestPrice()));
     lowestPriceButton.setText("Lowest Price\n$" + Format.formatMoney(stock.getLowestPrice()));
 
-    updateChart(stock, startWeek);
     updateBuyTotal(stock.getSalesPrice());
   }
 
@@ -306,18 +288,6 @@ public class StockDetailView extends VBox {
     return box;
   }
 
-  private void updateChart(Stock stock, int startWeek) {
-    chart.getData().clear();
-    XYChart.Series<Number, Number> series = new XYChart.Series<>();
-
-    List<BigDecimal> prices = stock.getHistoricalPrices();
-    for (int i = 0; i < prices.size(); i++) {
-      series.getData().add(
-          new XYChart.Data<>(startWeek + i, prices.get(i).doubleValue()));
-    }
-    chart.getData().add(series);
-  }
-
   private void applyChangeStyle(Label label, BigDecimal change) {
     label.getStyleClass().removeAll("price-up", "price-down", "price-flat");
     if (change.signum() > 0) {
@@ -341,6 +311,10 @@ public class StockDetailView extends VBox {
     return String.format("%.2f",
         change.divide(prev, 4, java.math.RoundingMode.HALF_UP)
             .multiply(BigDecimal.valueOf(100)).doubleValue());
+  }
+
+  public StockPriceChartView getChartView() {
+    return chartView;
   }
 
   public Spinner<Integer> getQuantitySpinner() {
