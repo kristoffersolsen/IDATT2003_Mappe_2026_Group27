@@ -10,6 +10,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -48,6 +49,9 @@ public class StockDetailView extends VBox {
   private final Spinner<Integer> quantitySpinner =
       new Spinner<>(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100_000, 1));
   private final Button buyButton = new Button("Buy");
+  private final Button limitBuyToggle = new Button("Limit Buy");
+  private final TextField triggerPriceField = new TextField();
+  private final VBox triggerPriceSection = new VBox();
   private final Label buyTotalLabel = new Label();
   private final Label buyErrorLabel = new Label();
 
@@ -114,11 +118,22 @@ public class StockDetailView extends VBox {
     buyErrorLabel.setManaged(false);
 
     buyButton.getStyleClass().add("button-light-grey");
+    limitBuyToggle.getStyleClass().add("button-light-grey");
 
-    HBox buyRow = new HBox(12, qtyLabel, quantitySpinner, buyButton);
+    HBox buyRow = new HBox(12, qtyLabel, quantitySpinner, buyButton, limitBuyToggle);
     buyRow.setAlignment(Pos.CENTER_LEFT);
 
-    VBox buyForm = new VBox(8, purchaseTitle, buyRow, buyTotalLabel, buyErrorLabel);
+    Label triggerLabel = new Label("Trigger price ($)");
+    triggerLabel.getStyleClass().addAll("font-black", "font-small");
+    triggerPriceField.setPromptText("e.g. 150.00");
+    triggerPriceField.setPrefWidth(120);
+    triggerPriceSection.setSpacing(4);
+    triggerPriceSection.getChildren().addAll(triggerLabel, triggerPriceField);
+    triggerPriceSection.setVisible(false);
+    triggerPriceSection.setManaged(false);
+
+    VBox buyForm = new VBox(8, purchaseTitle, buyRow, triggerPriceSection, buyTotalLabel,
+        buyErrorLabel);
     buyForm.setPadding(new Insets(14, 16, 14, 16));
     buyForm.getStyleClass().add("buy-form");
 
@@ -313,6 +328,20 @@ public class StockDetailView extends VBox {
             .multiply(BigDecimal.valueOf(100)).doubleValue());
   }
 
+  /**
+   * Shows or hides the trigger-price section used for limit buy orders.
+   *
+   * <p>When visible, the section reveals a text field where the player
+   * enters the trigger price before placing a limit buy order.
+   *
+   * @param visible true to reveal the trigger-price field, false to hide it
+   */
+  public void setLimitBuyMode(boolean visible) {
+    triggerPriceSection.setVisible(visible);
+    triggerPriceSection.setManaged(visible);
+    buyButton.setText(visible ? "Place limit buy" : "Buy");
+  }
+
   public StockPriceChartView getChartView() {
     return chartView;
   }
@@ -323,5 +352,13 @@ public class StockDetailView extends VBox {
 
   public Button getBuyButton() {
     return buyButton;
+  }
+
+  public Button getLimitBuyToggle() {
+    return limitBuyToggle;
+  }
+
+  public TextField getTriggerPriceField() {
+    return triggerPriceField;
   }
 }

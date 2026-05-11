@@ -43,6 +43,7 @@ public class ExchangeService {
   private final PriceModel priceModel;
   private final MarketContext marketContext;
   private StockFileRecord stockFileRecord;
+  private OrderService orderService;
 
   /**
    * Package-private constructor used by the public factory methods.
@@ -210,8 +211,22 @@ public class ExchangeService {
   }
 
   /**
+   * Wires an {@link OrderService} so that pending limit orders are evaluated
+   * on every tick after prices are updated.
+   *
+   * <p>Called once during game setup, after both the exchange service and
+   * order service are constructed.
+   *
+   * @param orderService the order service to evaluate each tick
+   */
+  public void setOrderService(OrderService orderService) {
+    this.orderService = orderService;
+  }
+
+  /**
    * Advances the exchange by one simulated hour, updating every stock price via
-   * {@link PriceModel}, then notifies observers with {@link GameEvent#HOUR_ADVANCED}.
+   * {@link PriceModel}, evaluating pending limit orders, then notifying observers
+   * with {@link GameEvent#HOUR_ADVANCED}.
    *
    * <p>Called by {@link ntnu.idatt2003.millions.model.time.GameClock} once per
    * hour in a skip loop.
@@ -221,6 +236,9 @@ public class ExchangeService {
       stock.addNewSalesPrice(priceModel.nextPrice(stock, marketContext));
     }
     exchange.incrementTick();
+    if (orderService != null) {
+      orderService.evaluateOrders(exchange.getTickCount());
+    }
     exchange.notifyObservers(GameEvent.HOUR_ADVANCED);
   }
 
