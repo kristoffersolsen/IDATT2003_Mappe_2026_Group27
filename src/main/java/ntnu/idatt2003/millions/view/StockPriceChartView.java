@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 
 /**
  * Chart panel that displays a stock's price history with a navigation toolbar.
@@ -78,28 +79,32 @@ public class StockPriceChartView extends VBox {
   }
 
   private void buildChart() {
-    xAxis.setLabel("Week");
+    xAxis.setAutoRanging(false);
+    xAxis.setLabel("");
     xAxis.setTickLabelFill(javafx.scene.paint.Color.web("#555555"));
     yAxis.setLabel("Price ($)");
     yAxis.setTickLabelFill(javafx.scene.paint.Color.web("#555555"));
 
     chart.setLegendVisible(false);
     chart.setAnimated(false);
-    chart.setCreateSymbols(true);
     chart.setPadding(new Insets(8, 16, 0, 8));
     chart.getStyleClass().add("stock-chart");
   }
 
   /**
-   * Renders the given price slice on the chart.
+   * Renders the given prices on the chart with caller-controlled axis formatting.
    *
-   * <p>The x-axis is explicitly bounded to the slice so the data always fills
-   * the full chart width regardless of zoom level.
+   * <p>X-values are always 0-based so the data fills the full chart width.
+   * The axis is explicitly bounded and labelled according to the active zoom level.
    *
-   * @param prices  the slice of prices to display
-   * @param xOffset the x-axis value corresponding to the first element of prices
+   * @param prices      the data points to display (possibly downsampled)
+   * @param tickUnit    spacing between labeled ticks on the x-axis
+   * @param xFormatter  converts an x-axis tick value to its display label
+   * @param showSymbols whether to draw a dot at each data point
    */
-  public void update(List<BigDecimal> prices, int xOffset) {
+  public void update(List<BigDecimal> prices, double tickUnit,
+                     StringConverter<Number> xFormatter, boolean showSymbols) {
+    chart.setCreateSymbols(showSymbols);
     chart.getData().clear();
     if (prices.isEmpty()) {
       return;
@@ -107,14 +112,14 @@ public class StockPriceChartView extends VBox {
 
     XYChart.Series<Number, Number> series = new XYChart.Series<>();
     for (int i = 0; i < prices.size(); i++) {
-      series.getData().add(new XYChart.Data<>(xOffset + i, prices.get(i).doubleValue()));
+      series.getData().add(new XYChart.Data<>(i, prices.get(i).doubleValue()));
     }
     chart.getData().add(series);
 
-    xAxis.setAutoRanging(false);
-    xAxis.setLowerBound(xOffset);
-    xAxis.setUpperBound(xOffset + prices.size() - 1);
-    xAxis.setTickUnit(Math.max(1.0, Math.ceil((prices.size() - 1) / 8.0)));
+    xAxis.setLowerBound(0);
+    xAxis.setUpperBound(prices.size() - 1);
+    xAxis.setTickUnit(tickUnit);
+    xAxis.setTickLabelFormatter(xFormatter);
   }
 
   /**
