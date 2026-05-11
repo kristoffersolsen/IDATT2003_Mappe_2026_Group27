@@ -93,16 +93,28 @@ public class StockPriceChartView extends VBox {
   /**
    * Renders the given price slice on the chart.
    *
+   * <p>The x-axis is explicitly bounded to the slice so the data always fills
+   * the full chart width regardless of zoom level.
+   *
    * @param prices  the slice of prices to display
    * @param xOffset the x-axis value corresponding to the first element of prices
    */
   public void update(List<BigDecimal> prices, int xOffset) {
     chart.getData().clear();
+    if (prices.isEmpty()) {
+      return;
+    }
+
     XYChart.Series<Number, Number> series = new XYChart.Series<>();
     for (int i = 0; i < prices.size(); i++) {
       series.getData().add(new XYChart.Data<>(xOffset + i, prices.get(i).doubleValue()));
     }
     chart.getData().add(series);
+
+    xAxis.setAutoRanging(false);
+    xAxis.setLowerBound(xOffset);
+    xAxis.setUpperBound(xOffset + prices.size() - 1);
+    xAxis.setTickUnit(Math.max(1.0, Math.ceil((prices.size() - 1) / 8.0)));
   }
 
   /**
