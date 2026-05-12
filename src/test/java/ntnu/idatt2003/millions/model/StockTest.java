@@ -116,13 +116,15 @@ class StockTest {
 
 
   @Test
-  @DisplayName("toStringList returns symbol, company, and price as strings")
+  @DisplayName("toStringList returns symbol, company, price, dividend, and interval as strings")
   void toStringList() {
     String[] result = stock.toStringList();
-    assertEquals(3, result.length);
+    assertEquals(5, result.length);
     assertEquals("AAA", result[0]);
     assertEquals("Company A", result[1]);
     assertEquals("150", result[2]);
+    assertEquals("0", result[3]);  // non-paying stock
+    assertEquals("0", result[4]);
   }
 
 }

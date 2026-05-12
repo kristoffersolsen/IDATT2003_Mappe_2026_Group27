@@ -17,6 +17,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import ntnu.idatt2003.millions.controller.StockDetailController;
 import ntnu.idatt2003.millions.model.Stock;
+import ntnu.idatt2003.millions.model.transaction.Dividend;
 import ntnu.idatt2003.millions.model.transaction.Purchase;
 import ntnu.idatt2003.millions.model.transaction.PurchaseCalculator;
 import ntnu.idatt2003.millions.model.transaction.Sale;
@@ -39,6 +40,7 @@ public class StockDetailView extends VBox {
   private final Label priceLabel = new Label();
   private final Label changeAbsLabel = new Label();
   private final Label changePctLabel = new Label();
+  private final Label dividendLabel = new Label();
   private final Button highestPriceButton = new Button();
   private final Button lowestPriceButton = new Button();
 
@@ -77,6 +79,9 @@ public class StockDetailView extends VBox {
     priceLabel.getStyleClass().add("stock-price-label");
     changeAbsLabel.getStyleClass().addAll("font-small");
     changePctLabel.getStyleClass().addAll("font-small");
+    dividendLabel.getStyleClass().addAll("font-grey", "font-small");
+    dividendLabel.setVisible(false);
+    dividendLabel.setManaged(false);
     highestPriceButton.getStyleClass().add("stat-button");
     lowestPriceButton.getStyleClass().add("stat-button");
   }
@@ -85,7 +90,7 @@ public class StockDetailView extends VBox {
     VBox nameBlock = new VBox(2, symbolLabel, companyLabel);
     nameBlock.setAlignment(Pos.CENTER_LEFT);
 
-    VBox priceBlock = new VBox(2, priceLabel, changeAbsLabel, changePctLabel);
+    VBox priceBlock = new VBox(2, priceLabel, changeAbsLabel, changePctLabel, dividendLabel);
     priceBlock.setAlignment(Pos.CENTER_LEFT);
 
     Region spacer = new Region();
@@ -190,6 +195,16 @@ public class StockDetailView extends VBox {
     highestPriceButton.setText("Highest Price\n$" + Format.formatMoney(stock.getHighestPrice()));
     lowestPriceButton.setText("Lowest Price\n$" + Format.formatMoney(stock.getLowestPrice()));
 
+    if (stock.paysDividend()) {
+      dividendLabel.setText("Dividend: $" + Format.formatMoney(stock.getDividendPerShare())
+          + " / " + stock.getDividendIntervalHours() + "h");
+      dividendLabel.setVisible(true);
+      dividendLabel.setManaged(true);
+    } else {
+      dividendLabel.setVisible(false);
+      dividendLabel.setManaged(false);
+    }
+
     updateBuyTotal(stock.getSalesPrice());
   }
 
@@ -246,32 +261,41 @@ public class StockDetailView extends VBox {
   }
 
   private VBox buildTxRow(Transaction tx) {
-    boolean isBuy = tx instanceof Purchase;
+    if (tx instanceof Dividend div) {
+      return buildDividendTxRow(div);
+    }
+    if (tx instanceof Sale sale) {
+      return buildSaleTxRow(sale);
+    }
+    return buildPurchaseTxRow((Purchase) tx);
+  }
 
-    Label typeLabel = new Label(isBuy ? "Buy" : "Sell");
-    typeLabel.getStyleClass().add(isBuy ? "tx-type-buy" : "tx-type-sell");
+  private VBox buildPurchaseTxRow(Purchase tx) {
+    Label typeLabel = new Label("Buy");
+    typeLabel.getStyleClass().add("tx-type-buy");
     typeLabel.setPrefWidth(28);
 
     String qtyStr = tx.getShare().quantity().stripTrailingZeros().toPlainString();
-
-    if (isBuy) {
-      Label detail = new Label(
-          qtyStr + " x $" + Format.formatMoney(tx.getShare().purchasePrice()));
-      detail.getStyleClass().addAll("font-black", "font-small");
-      HBox.setHgrow(detail, Priority.ALWAYS);
-
-      HBox row = new HBox(6, typeLabel, detail, weekLabel(tx));
-      row.setAlignment(Pos.CENTER_LEFT);
-      return wrap(row);
-    }
-
-    Sale sale = (Sale) tx;
-    Label detail = new Label(
-        qtyStr + " x $" + Format.formatMoney(sale.getSalePrice()));
+    Label detail = new Label(qtyStr + " x $" + Format.formatMoney(tx.getShare().purchasePrice()));
     detail.getStyleClass().addAll("font-black", "font-small");
     HBox.setHgrow(detail, Priority.ALWAYS);
 
-    HBox topRow = new HBox(6, typeLabel, detail, weekLabel(tx));
+    HBox row = new HBox(6, typeLabel, detail, weekLabel(tx));
+    row.setAlignment(Pos.CENTER_LEFT);
+    return wrap(row);
+  }
+
+  private VBox buildSaleTxRow(Sale sale) {
+    Label typeLabel = new Label("Sell");
+    typeLabel.getStyleClass().add("tx-type-sell");
+    typeLabel.setPrefWidth(28);
+
+    String qtyStr = sale.getShare().quantity().stripTrailingZeros().toPlainString();
+    Label detail = new Label(qtyStr + " x $" + Format.formatMoney(sale.getSalePrice()));
+    detail.getStyleClass().addAll("font-black", "font-small");
+    HBox.setHgrow(detail, Priority.ALWAYS);
+
+    HBox topRow = new HBox(6, typeLabel, detail, weekLabel(sale));
     topRow.setAlignment(Pos.CENTER_LEFT);
 
     BigDecimal gain = sale.getRealisedGain();
@@ -283,6 +307,22 @@ public class StockDetailView extends VBox {
     gainLabel.getStyleClass().add(positive ? "gain-positive" : "gain-negative");
 
     return wrap(topRow, gainLabel);
+  }
+
+  private VBox buildDividendTxRow(Dividend div) {
+    Label typeLabel = new Label("Div");
+    typeLabel.getStyleClass().add("tx-type-dividend");
+    typeLabel.setPrefWidth(28);
+
+    Label detail = new Label(
+        "$" + Format.formatMoney(div.getDividendPerShare()) + "/share  +"
+            + "$" + Format.formatMoney(div.getTotalPaid()));
+    detail.getStyleClass().addAll("font-black", "font-small");
+    HBox.setHgrow(detail, Priority.ALWAYS);
+
+    HBox row = new HBox(6, typeLabel, detail, weekLabel(div));
+    row.setAlignment(Pos.CENTER_LEFT);
+    return wrap(row);
   }
 
   private Label weekLabel(Transaction tx) {

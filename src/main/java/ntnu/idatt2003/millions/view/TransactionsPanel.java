@@ -10,6 +10,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import ntnu.idatt2003.millions.model.transaction.Dividend;
 import ntnu.idatt2003.millions.model.transaction.Purchase;
 import ntnu.idatt2003.millions.model.transaction.Sale;
 import ntnu.idatt2003.millions.model.transaction.Transaction;
@@ -75,6 +76,9 @@ public class TransactionsPanel extends VBox {
   }
 
   private VBox buildRow(Transaction tx) {
+    if (tx instanceof Dividend div) {
+      return buildDividendRow(div);
+    }
     if (tx instanceof Sale sale) {
       return buildSaleRow(sale);
     }
@@ -123,6 +127,32 @@ public class TransactionsPanel extends VBox {
     gainLabel.getStyleClass().add(positive ? "gain-positive" : "gain-negative");
 
     return card(topRow, gainLabel);
+  }
+
+  private VBox buildDividendRow(Dividend tx) {
+    Label typeLabel = typeLabel("Div", true);
+    typeLabel.getStyleClass().clear();
+    typeLabel.getStyleClass().add("tx-type-dividend");
+    typeLabel.setPrefWidth(32);
+    typeLabel.setMinWidth(32);
+
+    Label detail = new Label(
+        tx.getShare().stock().getSymbol()
+            + "  ·  " + qty(tx)
+            + " shares @ $" + Format.formatMoney(tx.getDividendPerShare())
+            + "/share");
+    detail.getStyleClass().addAll("font-white", "font-small");
+    HBox.setHgrow(detail, Priority.ALWAYS);
+
+    Label amountLabel = new Label("+$" + Format.formatMoney(tx.getTotalPaid()));
+    amountLabel.getStyleClass().add("gain-positive");
+
+    Label weekLabel = weekLabel(tx);
+
+    HBox topRow = new HBox(8, typeLabel, detail, weekLabel);
+    topRow.setAlignment(Pos.CENTER_LEFT);
+
+    return card(topRow, amountLabel);
   }
 
   private Label typeLabel(String text, boolean isBuy) {

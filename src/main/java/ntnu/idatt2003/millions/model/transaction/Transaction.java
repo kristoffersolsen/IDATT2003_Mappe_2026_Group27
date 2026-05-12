@@ -5,9 +5,12 @@ import ntnu.idatt2003.millions.model.Share;
 import ntnu.idatt2003.millions.service.ExchangeService;
 
 /**
- * Abstract class for all transactions.
+ * Abstract base for all transactions.
+ *
+ * <p>Sealed so that future transaction types must be explicitly permitted here.
+ * Currently permits {@link Purchase}, {@link Sale}, and {@link Dividend}.
  */
-public abstract class Transaction {
+public abstract sealed class Transaction permits Purchase, Sale, Dividend {
 
   /**
    * Number of simulation ticks in one trading week (8 h/day × 5 days/week).

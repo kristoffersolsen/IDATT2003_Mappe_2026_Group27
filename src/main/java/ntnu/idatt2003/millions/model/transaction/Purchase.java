@@ -6,7 +6,7 @@ import ntnu.idatt2003.millions.model.Share;
 /**
  * A purchase transaction.
  */
-public class Purchase extends Transaction {
+public final class Purchase extends Transaction {
 
   /**
    * Constructor.

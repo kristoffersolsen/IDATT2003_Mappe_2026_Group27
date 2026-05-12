@@ -12,6 +12,7 @@ import ntnu.idatt2003.millions.model.Player;
 import ntnu.idatt2003.millions.model.StockFileRecord;
 import ntnu.idatt2003.millions.model.order.OrderBook;
 import ntnu.idatt2003.millions.model.time.GameClock;
+import ntnu.idatt2003.millions.service.DividendService;
 import ntnu.idatt2003.millions.service.ExchangeService;
 import ntnu.idatt2003.millions.service.OrderService;
 import ntnu.idatt2003.millions.service.StockFileService;
@@ -106,6 +107,10 @@ public class StartController {
     orderService.registerPlayer(player);
     exchangeService.setOrderService(orderService);
 
+    DividendService dividendService = new DividendService(exchangeService.getExchange());
+    dividendService.registerPlayer(player);
+    exchangeService.setDividendService(dividendService);
+
     GameClock clock = new GameClock(exchangeService, settings);
     GameContext context = new GameContext(
         settings,
@@ -113,7 +118,7 @@ public class StartController {
         clock,
         clock.currentTime(),
         orderService,
-        null);
+        dividendService);
 
     appController.startGame(player, exchangeService, context);
   }

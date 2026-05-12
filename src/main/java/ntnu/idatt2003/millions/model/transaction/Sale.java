@@ -13,7 +13,7 @@ import ntnu.idatt2003.millions.service.ExchangeService;
  * at the time it is created, so the transaction history can display them
  * without recomputing.
  */
-public class Sale extends Transaction {
+public final class Sale extends Transaction {
 
   private final BigDecimal salePrice;
   private final BigDecimal realizedGain;

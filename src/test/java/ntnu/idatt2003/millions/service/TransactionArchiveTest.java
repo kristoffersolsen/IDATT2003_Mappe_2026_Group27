@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import ntnu.idatt2003.millions.model.Share;
 import ntnu.idatt2003.millions.model.Stock;
+import ntnu.idatt2003.millions.model.transaction.Dividend;
 import ntnu.idatt2003.millions.model.transaction.Purchase;
 import ntnu.idatt2003.millions.model.transaction.Sale;
 import ntnu.idatt2003.millions.model.transaction.Transaction;
@@ -41,6 +42,11 @@ class TransactionArchiveTest {
   private Sale makeSale(long tick) {
     Share share = new Share(stock, BigDecimal.valueOf(1), BigDecimal.valueOf(10));
     return new Sale(share, tick);
+  }
+
+  private Dividend makeDividend(long tick) {
+    Share share = new Share(stock, BigDecimal.valueOf(5), new BigDecimal("0.50"));
+    return new Dividend(share, tick);
   }
 
   @Test
@@ -107,6 +113,49 @@ class TransactionArchiveTest {
     void getSalesEmptyWhenNone() {
       archive.add(makePurchase(0L));
       assertTrue(archive.getSales().isEmpty());
+    }
+  }
+
+  @Nested
+  @DisplayName("Dividend round-trip")
+  class DividendRoundTrip {
+
+    @Test
+    @DisplayName("dividend_addedToArchive_retrievedAsTransaction")
+    void dividend_addedToArchive_retrievedAsTransaction() {
+      Dividend div = makeDividend(0L);
+      archive.add(div);
+      List<Transaction> all = archive.getTransactions();
+      assertEquals(1, all.size());
+      assertInstanceOf(Dividend.class, all.get(0));
+    }
+
+    @Test
+    @DisplayName("dividend_preservesDividendPerShare")
+    void dividend_preservesDividendPerShare() {
+      Dividend div = makeDividend(0L);
+      archive.add(div);
+      Dividend retrieved = (Dividend) archive.getTransactions().get(0);
+      assertEquals(0, new BigDecimal("0.50").compareTo(retrieved.getDividendPerShare()));
+    }
+
+    @Test
+    @DisplayName("dividend_preservesTotalPaid")
+    void dividend_preservesTotalPaid() {
+      Dividend div = makeDividend(0L);
+      archive.add(div);
+      Dividend retrieved = (Dividend) archive.getTransactions().get(0);
+      BigDecimal expected = new BigDecimal("0.50").multiply(BigDecimal.valueOf(5));
+      assertEquals(0, expected.compareTo(retrieved.getTotalPaid()));
+    }
+
+    @Test
+    @DisplayName("dividend_mixedArchive_retrievedAlongPurchasesAndSales")
+    void dividend_mixedArchive_retrievedAlongPurchasesAndSales() {
+      archive.add(makePurchase(0L));
+      archive.add(makeDividend(5L));
+      archive.add(makeSale(TICKS_PER_WEEK));
+      assertEquals(3, archive.getTransactions().size());
     }
   }
 

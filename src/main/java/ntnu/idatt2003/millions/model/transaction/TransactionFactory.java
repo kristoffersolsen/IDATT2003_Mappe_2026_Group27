@@ -38,4 +38,15 @@ public final class TransactionFactory {
   public static Sale createSale(Share share, long tick) {
     return new Sale(share, tick);
   }
+
+  /**
+   * Creates a new {@link Dividend} transaction.
+   *
+   * @param share the share encoding the dividend rate in its purchase-price field
+   * @param tick  the current simulation tick
+   * @return a new, uncommitted {@link Dividend}
+   */
+  public static Dividend createDividend(Share share, long tick) {
+    return new Dividend(share, tick);
+  }
 }

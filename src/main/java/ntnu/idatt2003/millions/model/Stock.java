@@ -18,18 +18,39 @@ public class Stock {
   private final String company;
   private final List<BigDecimal> prices = new ArrayList<>();
   private BigDecimal priceAtSkipStart;
+  private final BigDecimal dividendPerShare;
+  private final int dividendIntervalHours;
 
   /**
-   * Default stock constructor.
+   * Constructs a non-dividend-paying stock.
    *
-   * @param symbol     set of letters representing the company name
-   * @param company    the name of the company
-   * @param salesPrice last sales price of the stock
+   * @param symbol     ticker symbol representing the company
+   * @param company    full company name
+   * @param salesPrice initial sales price
    */
   public Stock(String symbol, String company, BigDecimal salesPrice) {
+    this(symbol, company, salesPrice, BigDecimal.ZERO, 0);
+  }
+
+  /**
+   * Constructs a stock with optional dividend data.
+   *
+   * <p>A stock pays dividends when both {@code dividendPerShare} is positive
+   * and {@code dividendIntervalHours} is positive.
+   *
+   * @param symbol                the ticker symbol
+   * @param company               the full company name
+   * @param salesPrice            the initial sales price
+   * @param dividendPerShare      the per-share dividend amount, or zero if non-paying
+   * @param dividendIntervalHours the payment interval in hours, or zero if non-paying
+   */
+  public Stock(String symbol, String company, BigDecimal salesPrice,
+      BigDecimal dividendPerShare, int dividendIntervalHours) {
     this.symbol = symbol;
     this.company = company;
     this.prices.add(salesPrice);
+    this.dividendPerShare = dividendPerShare;
+    this.dividendIntervalHours = dividendIntervalHours;
   }
 
   public String getSymbol() {
@@ -123,15 +144,50 @@ public class Stock {
   }
 
   /**
-   * Converts parameters to a string array. Used in file handling.
+   * Returns whether this stock pays periodic dividends.
    *
-   * @return stock parameters as a string array
+   * @return true if both {@code dividendPerShare} and {@code dividendIntervalHours}
+   *         are positive
+   */
+  public boolean paysDividend() {
+    return dividendPerShare != null
+        && dividendPerShare.signum() > 0
+        && dividendIntervalHours > 0;
+  }
+
+  /**
+   * Returns the per-share dividend amount, or {@link BigDecimal#ZERO} if non-paying.
+   *
+   * @return dividend per share
+   */
+  public BigDecimal getDividendPerShare() {
+    return dividendPerShare == null ? BigDecimal.ZERO : dividendPerShare;
+  }
+
+  /**
+   * Returns the dividend payment interval in simulated hours, or {@code 0} if non-paying.
+   *
+   * @return dividend interval in hours
+   */
+  public int getDividendIntervalHours() {
+    return dividendIntervalHours;
+  }
+
+  /**
+   * Converts this stock to a string array for CSV serialisation.
+   *
+   * <p>Returns five elements: symbol, company, current price, dividend per share,
+   * and dividend interval. Non-paying stocks use {@code "0"} for the last two.
+   *
+   * @return stock fields as a string array
    */
   public String[] toStringList() {
     return new String[] {
         this.getSymbol(),
         this.getCompany(),
-        this.getSalesPrice().toString()
+        this.getSalesPrice().toString(),
+        getDividendPerShare().toPlainString(),
+        String.valueOf(dividendIntervalHours)
     };
   }
 }

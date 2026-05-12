@@ -44,6 +44,7 @@ public class ExchangeService {
   private final MarketContext marketContext;
   private StockFileRecord stockFileRecord;
   private OrderService orderService;
+  private DividendService dividendService;
 
   /**
    * Package-private constructor used by the public factory methods.
@@ -224,9 +225,29 @@ public class ExchangeService {
   }
 
   /**
-   * Advances the exchange by one simulated hour, updating every stock price via
-   * {@link PriceModel}, evaluating pending limit orders, then notifying observers
-   * with {@link GameEvent#HOUR_ADVANCED}.
+   * Wires a {@link DividendService} so that dividends are paid on every
+   * eligible tick after order evaluation.
+   *
+   * <p>Called once during game setup, after both the exchange service and
+   * dividend service are constructed.
+   *
+   * @param dividendService the dividend service to call each tick
+   */
+  public void setDividendService(DividendService dividendService) {
+    this.dividendService = dividendService;
+  }
+
+  /**
+   * Advances the exchange by one simulated hour.
+   *
+   * <p>Processing order per tick:
+   * <ol>
+   *   <li>Update every stock price via {@link PriceModel}.</li>
+   *   <li>Increment the tick counter.</li>
+   *   <li>Evaluate pending limit orders via {@link OrderService}.</li>
+   *   <li>Pay due dividends via {@link DividendService}.</li>
+   *   <li>Notify observers with {@link GameEvent#HOUR_ADVANCED}.</li>
+   * </ol>
    *
    * <p>Called by {@link ntnu.idatt2003.millions.model.time.GameClock} once per
    * hour in a skip loop.
@@ -238,6 +259,9 @@ public class ExchangeService {
     exchange.incrementTick();
     if (orderService != null) {
       orderService.evaluateOrders(exchange.getTickCount());
+    }
+    if (dividendService != null) {
+      dividendService.payDividends(exchange.getTickCount());
     }
     exchange.notifyObservers(GameEvent.HOUR_ADVANCED);
   }

@@ -51,5 +51,10 @@ public enum GameEvent {
   /**
    * A pending limit order was cancelled and its reserved cash refunded.
    */
-  LIMIT_ORDER_CANCELLED
+  LIMIT_ORDER_CANCELLED,
+
+  /**
+   * A dividend was paid to a player for shares they hold.
+   */
+  DIVIDEND_PAID
 }
