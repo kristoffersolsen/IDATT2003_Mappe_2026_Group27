@@ -90,3 +90,18 @@
 }
 .bottom-section { -fx-background-color: #e8e8e8; }
 
+/* ---- Resizable panel dividers ---- */
+.main-split {
+    -fx-background-color: #1e1e1e;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+.main-split > .split-pane-divider {
+    -fx-background-color: #3c3c3c;
+    -fx-padding: 0 3 0 3;
+    -fx-cursor: h-resize;
+}
+.main-split > .split-pane-divider:hover {
+    -fx-background-color: #555555;
+}
+
