@@ -27,7 +27,7 @@ public class Main extends Application {
     stage.setMinWidth(900);
     stage.setMinHeight(600);
 
-    Scene scene = new Scene(new Region(), 900, 600);
+    Scene scene = new Scene(new Region(), 1300, 800);
     stage.setScene(scene);
     stage.show();
     String[] cssFiles = {

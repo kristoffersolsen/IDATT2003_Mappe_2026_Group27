@@ -5,6 +5,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -51,6 +52,7 @@ public class DashboardView {
   private final Button ordersButton = new Button("Pending Orders");
 
   private final MarketView marketView = new MarketView();
+  private final SplitPane mainSplit = new SplitPane();
 
   /**
    * Builds the dashboard layout.
@@ -59,10 +61,14 @@ public class DashboardView {
     root = new BorderPane();
     root.getStyleClass().add("root");
 
+    marketView.setMinWidth(120);
+    mainSplit.getItems().add(marketView);
+    SplitPane.setResizableWithParent(marketView, false);
+    mainSplit.getStyleClass().add("main-split");
+
     root.setTop(buildTopBar());
-    root.setLeft(marketView);
+    root.setCenter(mainSplit);
     root.setBottom(buildBottomBar());
-    // Center is set later by DashboardController via setCenterPanel()
   }
 
   /**
@@ -74,7 +80,12 @@ public class DashboardView {
    * @param panel the node to display in the center
    */
   public void setCenterPanel(Node panel) {
-    root.setCenter(panel);
+    if (mainSplit.getItems().size() >= 2) {
+      mainSplit.getItems().set(1, panel);
+    } else {
+      mainSplit.getItems().add(panel);
+      mainSplit.setDividerPositions(0.22);
+    }
   }
 
   /**
@@ -83,7 +94,21 @@ public class DashboardView {
    * @param panel the node to show, or null to close the right region
    */
   public void setRightPanel(VBox panel) {
-    root.setRight(panel);
+    var items = mainSplit.getItems();
+    if (panel == null) {
+      if (items.size() == 3) {
+        items.remove(2);
+      }
+    } else {
+      panel.setMinWidth(180);
+      SplitPane.setResizableWithParent(panel, false);
+      if (items.size() == 3) {
+        items.set(2, panel);
+      } else {
+        items.add(panel);
+        mainSplit.setDividerPositions(mainSplit.getDividerPositions()[0], 0.75);
+      }
+    }
   }
 
   /**
