@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,20 +21,21 @@ public class Stock {
   private BigDecimal priceAtSkipStart;
   private final BigDecimal dividendPerShare;
   private final int dividendIntervalHours;
+  private final Set<Sector> sectors;
 
   /**
-   * Constructs a non-dividend-paying stock.
+   * Constructs a non-dividend-paying stock with no sector assigned.
    *
    * @param symbol     ticker symbol representing the company
    * @param company    full company name
    * @param salesPrice initial sales price
    */
   public Stock(String symbol, String company, BigDecimal salesPrice) {
-    this(symbol, company, salesPrice, BigDecimal.ZERO, 0);
+    this(symbol, company, salesPrice, BigDecimal.ZERO, 0, Set.of(Sector.UNCATEGORIZED));
   }
 
   /**
-   * Constructs a stock with optional dividend data.
+   * Constructs a stock with optional dividend data and no sector assigned.
    *
    * <p>A stock pays dividends when both {@code dividendPerShare} is positive
    * and {@code dividendIntervalHours} is positive.
@@ -45,12 +47,33 @@ public class Stock {
    * @param dividendIntervalHours the payment interval in hours, or zero if non-paying
    */
   public Stock(String symbol, String company, BigDecimal salesPrice,
-      BigDecimal dividendPerShare, int dividendIntervalHours) {
+               BigDecimal dividendPerShare, int dividendIntervalHours) {
+    this(symbol, company, salesPrice, dividendPerShare, dividendIntervalHours,
+        Set.of(Sector.UNCATEGORIZED));
+  }
+
+  /**
+   * Constructs a stock with dividend data and sector membership.
+   *
+   * <p>A stock pays dividends when both {@code dividendPerShare} is positive
+   * and {@code dividendIntervalHours} is positive. Sector weighting is equal
+   * across all supplied sectors: a stock in two sectors has weight {@code 0.5} each.
+   *
+   * @param symbol                the ticker symbol
+   * @param company               the full company name
+   * @param salesPrice            the initial sales price
+   * @param dividendPerShare      the per-share dividend amount, or zero if non-paying
+   * @param dividendIntervalHours the payment interval in hours, or zero if non-paying
+   * @param sectors               the set of sectors this stock belongs to; must be non-empty
+   */
+  public Stock(String symbol, String company, BigDecimal salesPrice,
+               BigDecimal dividendPerShare, int dividendIntervalHours, Set<Sector> sectors) {
     this.symbol = symbol;
     this.company = company;
     this.prices.add(salesPrice);
     this.dividendPerShare = dividendPerShare;
     this.dividendIntervalHours = dividendIntervalHours;
+    this.sectors = Set.copyOf(sectors);
   }
 
   public String getSymbol() {
@@ -147,7 +170,7 @@ public class Stock {
    * Returns whether this stock pays periodic dividends.
    *
    * @return true if both {@code dividendPerShare} and {@code dividendIntervalHours}
-   *         are positive
+   * are positive
    */
   public boolean paysDividend() {
     return dividendPerShare != null
@@ -171,6 +194,31 @@ public class Stock {
    */
   public int getDividendIntervalHours() {
     return dividendIntervalHours;
+  }
+
+  /**
+   * Returns the set of sectors this stock belongs to.
+   *
+   * @return an unmodifiable set of sectors
+   */
+  public Set<Sector> getSectors() {
+    return sectors;
+  }
+
+  /**
+   * Returns the weight of this stock in the given sector.
+   *
+   * <p>Weight is {@code 1.0 / sectors.size()} when the stock belongs to the sector,
+   * and {@code 0.0} when it does not.
+   *
+   * @param sector the sector to query
+   * @return the sector weight, in the range [0.0, 1.0]
+   */
+  public double sectorWeight(Sector sector) {
+    if (!sectors.contains(sector)) {
+      return 0.0;
+    }
+    return 1.0 / sectors.size();
   }
 
   /**

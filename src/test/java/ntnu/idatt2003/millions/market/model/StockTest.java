@@ -1,13 +1,13 @@
 package ntnu.idatt2003.millions.market.model;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Stock")
 class StockTest {
@@ -125,6 +125,34 @@ class StockTest {
     assertEquals("150", result[2]);
     assertEquals("0", result[3]);  // non-paying stock
     assertEquals("0", result[4]);
+  }
+
+  @Nested
+  @DisplayName("sectorWeight")
+  class SectorWeight {
+
+    @Test
+    @DisplayName("single-sector stock has weight 1.0 for its sector")
+    void sectorWeight_singleSector() {
+      Stock s = new Stock("A", "A Corp", BigDecimal.ONE, BigDecimal.ZERO, 0, Set.of(Sector.TECH));
+      assertEquals(1.0, s.sectorWeight(Sector.TECH));
+    }
+
+    @Test
+    @DisplayName("two-sector stock has weight 0.5 for each member sector")
+    void sectorWeight_twoSectors() {
+      Stock s = new Stock("A", "A Corp", BigDecimal.ONE, BigDecimal.ZERO, 0,
+          Set.of(Sector.TECH, Sector.ENERGY));
+      assertEquals(0.5, s.sectorWeight(Sector.TECH), 1e-9);
+      assertEquals(0.5, s.sectorWeight(Sector.ENERGY), 1e-9);
+    }
+
+    @Test
+    @DisplayName("returns 0.0 for a sector the stock does not belong to")
+    void sectorWeight_nonMember_returnsZero() {
+      Stock s = new Stock("A", "A Corp", BigDecimal.ONE, BigDecimal.ZERO, 0, Set.of(Sector.TECH));
+      assertEquals(0.0, s.sectorWeight(Sector.FINANCE));
+    }
   }
 
 }

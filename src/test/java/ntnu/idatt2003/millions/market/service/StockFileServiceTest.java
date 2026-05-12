@@ -6,11 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import ntnu.idatt2003.millions.market.model.Sector;
 import ntnu.idatt2003.millions.market.model.Stock;
 import ntnu.idatt2003.millions.market.model.StockFileRecord;
 import org.junit.jupiter.api.DisplayName;
@@ -141,6 +144,59 @@ class StockFileServiceTest {
       StockFileRecord record = StockFileService.readStocks(file);
       assertEquals("Full meta", record.getDescription());
       assertEquals(7L, record.getTick());
+    }
+  }
+
+  @Nested
+  @DisplayName("sectors")
+  class Sectors {
+
+    @Test
+    @DisplayName("single-sector stock round-trips with correct sector")
+    void singleSector_roundTrip() throws IOException {
+      File file = tempFile("sec_single.csv");
+      List<Stock> stocks = List.of(
+          new Stock("T1", "Tech Corp", BigDecimal.ONE, BigDecimal.ZERO, 0,
+              Set.of(Sector.TECH)));
+      StockFileService.writeStocks(new StockFileRecord(stocks, file));
+      Stock read = StockFileService.readStocks(file).getStocks().get(0);
+      assertEquals(Set.of(Sector.TECH), read.getSectors());
+    }
+
+    @Test
+    @DisplayName("multi-sector stock round-trips with all sectors preserved")
+    void multiSector_roundTrip() throws IOException {
+      File file = tempFile("sec_multi.csv");
+      List<Stock> stocks = List.of(
+          new Stock("AM", "Multi Corp", BigDecimal.ONE, BigDecimal.ZERO, 0,
+              Set.of(Sector.TECH, Sector.RETAIL)));
+      StockFileService.writeStocks(new StockFileRecord(stocks, file));
+      Stock read = StockFileService.readStocks(file).getStocks().get(0);
+      assertEquals(Set.of(Sector.TECH, Sector.RETAIL), read.getSectors());
+    }
+
+    @Test
+    @DisplayName("missing sector column defaults to UNCATEGORIZED")
+    void missingSectorColumn_defaultsToUncategorized() throws IOException {
+      File file = tempFile("sec_missing.csv");
+      try (FileWriter fw = new FileWriter(file)) {
+        fw.write("\"Symbol\",\"Name\",\"Price\",\"Dividend\",\"DividendInterval\"\n");
+        fw.write("\"XX\",\"X Corp\",\"10.00\",\"0\",\"0\"\n");
+      }
+      Stock read = StockFileService.readStocks(file).getStocks().get(0);
+      assertEquals(Set.of(Sector.UNCATEGORIZED), read.getSectors());
+    }
+
+    @Test
+    @DisplayName("unknown sector name throws IOException with row information")
+    void invalidSectorName_throwsIoException() throws IOException {
+      File file = tempFile("sec_invalid.csv");
+      try (FileWriter fw = new FileWriter(file)) {
+        fw.write(
+            "\"Symbol\",\"Name\",\"Price\",\"Dividend\",\"DividendInterval\",\"Sectors\"\n");
+        fw.write("\"XX\",\"X Corp\",\"10.00\",\"0\",\"0\",\"INVALID_SECTOR\"\n");
+      }
+      assertThrows(IOException.class, () -> StockFileService.readStocks(file));
     }
   }
 
