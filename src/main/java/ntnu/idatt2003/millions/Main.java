@@ -4,8 +4,8 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
-import ntnu.idatt2003.millions.controller.AppController;
-import ntnu.idatt2003.millions.view.ErrorDialog;
+import ntnu.idatt2003.millions.app.controller.AppController;
+import ntnu.idatt2003.millions.shared.view.ErrorDialog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
