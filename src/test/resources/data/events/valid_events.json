@@ -1,0 +1,28 @@
+{
+  "templates": [
+    {
+      "id": "test_minor",
+      "headline": "Minor tech event",
+      "body": "A minor event in the tech sector.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "test_major",
+      "headline": "Major finance event",
+      "body": "A major event in the finance sector.",
+      "sectors": ["FINANCE"],
+      "severity": "MAJOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "test_crisis",
+      "headline": "Crisis energy event",
+      "body": "A crisis in the energy sector.",
+      "sectors": ["ENERGY"],
+      "severity": "CRISIS",
+      "direction": "NEGATIVE"
+    }
+  ]
+}

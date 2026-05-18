@@ -1,0 +1,12 @@
+{
+  "templates": [
+    {
+      "id": "bad_severity",
+      "headline": "Bad severity event",
+      "body": "Event with unknown severity.",
+      "sectors": ["TECH"],
+      "severity": "CATASTROPHIC",
+      "direction": "NEGATIVE"
+    }
+  ]
+}

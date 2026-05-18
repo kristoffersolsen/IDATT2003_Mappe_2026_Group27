@@ -1,0 +1,12 @@
+{
+  "templates": [
+    {
+      "id": "only_minor",
+      "headline": "Only minor event",
+      "body": "Only severity in file.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    }
+  ]
+}

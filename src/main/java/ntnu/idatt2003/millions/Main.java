@@ -37,7 +37,8 @@ public class Main extends Application {
         "/css/portfolio.css",
         "/css/transactions.css",
         "/css/orders.css",
-        "/css/start-end.css"
+        "/css/start-end.css",
+        "/css/news.css"
     };
     for (String cssFile : cssFiles) {
       try {

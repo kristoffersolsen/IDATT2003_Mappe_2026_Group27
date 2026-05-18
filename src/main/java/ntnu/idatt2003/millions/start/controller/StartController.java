@@ -1,23 +1,30 @@
 package ntnu.idatt2003.millions.start.controller;
 
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.Random;
+import java.util.List;
 import javafx.stage.Stage;
-import ntnu.idatt2003.millions.shared.config.Difficulty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ntnu.idatt2003.millions.app.config.GameContext;
+import ntnu.idatt2003.millions.app.controller.AppController;
+import ntnu.idatt2003.millions.event.model.EventTemplate;
+import ntnu.idatt2003.millions.event.service.EventService;
+import ntnu.idatt2003.millions.event.service.EventTemplateLoader;
+import ntnu.idatt2003.millions.market.model.Exchange;
+import ntnu.idatt2003.millions.market.model.StockFileRecord;
+import ntnu.idatt2003.millions.market.service.ExchangeService;
+import ntnu.idatt2003.millions.market.service.GameClock;
+import ntnu.idatt2003.millions.market.service.StockFileService;
+import ntnu.idatt2003.millions.order.model.OrderBook;
+import ntnu.idatt2003.millions.order.service.OrderService;
+import ntnu.idatt2003.millions.player.model.Player;
+import ntnu.idatt2003.millions.shared.config.Difficulty;
 import ntnu.idatt2003.millions.shared.config.GameDefaults;
 import ntnu.idatt2003.millions.shared.config.GameSettings;
-import ntnu.idatt2003.millions.player.model.Player;
-import ntnu.idatt2003.millions.market.model.StockFileRecord;
-import ntnu.idatt2003.millions.order.model.OrderBook;
-import ntnu.idatt2003.millions.market.service.GameClock;
-import ntnu.idatt2003.millions.transaction.service.DividendService;
-import ntnu.idatt2003.millions.market.service.ExchangeService;
-import ntnu.idatt2003.millions.order.service.OrderService;
-import ntnu.idatt2003.millions.market.service.StockFileService;
 import ntnu.idatt2003.millions.start.view.StartScreen;
-import ntnu.idatt2003.millions.app.controller.AppController;
+import ntnu.idatt2003.millions.transaction.service.DividendService;
 
 /**
  * Controller for the start screen.
@@ -26,6 +33,8 @@ import ntnu.idatt2003.millions.app.controller.AppController;
  * the game once a valid configuration is provided.
  */
 public class StartController {
+
+  private static final Logger log = LoggerFactory.getLogger(StartController.class);
 
   private final StartScreen view;
   private final Stage stage;
@@ -101,26 +110,36 @@ public class StartController {
     GameSettings settings = GameDefaults.forDifficulty(difficulty);
 
     Player player = new Player(name, capital);
-    ExchangeService exchangeService = new ExchangeService("Main Exchange", stockFile, settings);
+
+    long startTick = stockFile.getTick() == -1L ? 0L : stockFile.getTick();
+    Exchange exchange = new Exchange("Main Exchange", startTick, stockFile.getStocks());
 
     OrderBook orderBook = new OrderBook();
-    OrderService orderService = new OrderService(orderBook, exchangeService.getExchange());
+    OrderService orderService = new OrderService(orderBook, exchange);
     orderService.registerPlayer(player);
-    exchangeService.setOrderService(orderService);
 
-    DividendService dividendService = new DividendService(exchangeService.getExchange());
+    DividendService dividendService = new DividendService(exchange);
     dividendService.registerPlayer(player);
-    exchangeService.setDividendService(dividendService);
+
+    EventService eventService = loadEventService();
+
+    ExchangeService exchangeService = new ExchangeService(
+        exchange, stockFile, settings, orderService, dividendService, eventService);
 
     GameClock clock = new GameClock(exchangeService, settings);
-    GameContext context = new GameContext(
-        settings,
-        new Random(settings.randomSeed()),
-        clock,
-        clock.currentTime(),
-        orderService,
-        dividendService);
+    GameContext context = new GameContext(settings, clock, orderService, dividendService,
+        eventService);
 
     appController.startGame(player, exchangeService, context);
+  }
+
+  private EventService loadEventService() {
+    try {
+      List<EventTemplate> templates = EventTemplateLoader.loadFromClasspath();
+      return new EventService(templates);
+    } catch (IOException e) {
+      log.error("Failed to load event templates; events disabled for this session", e);
+      return null;
+    }
   }
 }

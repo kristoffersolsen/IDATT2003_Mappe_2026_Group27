@@ -1,14 +1,17 @@
 package ntnu.idatt2003.millions.transaction.view;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import ntnu.idatt2003.millions.transaction.model.Dividend;
 import ntnu.idatt2003.millions.transaction.model.Purchase;
@@ -23,11 +26,21 @@ import ntnu.idatt2003.millions.shared.util.Format;
  * Sell rows additionally show the sale price per share and the realised
  * gain or loss for the position.
  *
- * <p>Rows are ordered most-recent first. The panel is purely presentational.
+ * <p>Rows are ordered most-recent first and paginated at
+ * {@value #PAGE_SIZE} entries per page.
  */
 public class TransactionsPanel extends VBox {
 
+  /** Number of transaction rows shown per page. */
+  public static final int PAGE_SIZE = 12;
+
   private final VBox rowContainer = new VBox(6);
+  private final Label pageLabel = new Label("Page 1 of 1");
+  private final Button prevButton = new Button("←");
+  private final Button nextButton = new Button("→");
+
+  private List<Transaction> allTransactions = Collections.emptyList();
+  private int currentPage = 0;
 
   /**
    * Builds the transactions panel.
@@ -35,10 +48,6 @@ public class TransactionsPanel extends VBox {
   public TransactionsPanel() {
     Label title = new Label("Transactions");
     title.getStyleClass().addAll("font-white", "font-title");
-
-    Label emptyHint = new Label("No transactions yet.");
-    emptyHint.getStyleClass().addAll("font-grey", "font-small");
-    rowContainer.getChildren().add(emptyHint);
 
     ScrollPane scroll = new ScrollPane(rowContainer);
     scroll.setFitToWidth(true);
@@ -50,29 +59,86 @@ public class TransactionsPanel extends VBox {
     setPadding(new Insets(20));
     setPrefWidth(300);
     getStyleClass().add("content-dark");
-    getChildren().addAll(title, scroll);
+    getChildren().addAll(title, buildPaginationRow(), scroll);
+
+    wirePaginationButtons();
+    renderPage();
   }
 
   /**
-   * Replaces the displayed rows with the given transaction list.
+   * Replaces the full transaction list and re-renders the current page.
    *
-   * <p>Transactions are shown most-recent first.
+   * <p>The current page index is preserved across calls and clamped to a
+   * valid range so browsing older pages is not disrupted by new transactions.
+   * Transactions are shown most-recent first.
    *
    * @param transactions the full transaction history to display
    */
   public void setTransactions(List<Transaction> transactions) {
+    this.allTransactions = transactions;
+    int pages = totalPages();
+    if (currentPage >= pages) {
+      currentPage = Math.max(0, pages - 1);
+    }
+    renderPage();
+  }
+
+  private int totalPages() {
+    int size = allTransactions.size();
+    return Math.max(1, (size + PAGE_SIZE - 1) / PAGE_SIZE);
+  }
+
+  private void renderPage() {
     rowContainer.getChildren().clear();
 
-    if (transactions.isEmpty()) {
+    int pages = totalPages();
+    pageLabel.setText("Page " + (currentPage + 1) + " of " + pages);
+    prevButton.setDisable(currentPage <= 0);
+    nextButton.setDisable(currentPage >= pages - 1);
+
+    if (allTransactions.isEmpty()) {
       Label empty = new Label("No transactions yet.");
       empty.getStyleClass().addAll("font-grey", "font-small");
       rowContainer.getChildren().add(empty);
       return;
     }
 
-    for (int i = transactions.size() - 1; i >= 0; i--) {
-      rowContainer.getChildren().add(buildRow(transactions.get(i)));
+    // History is stored oldest-first; display newest-first by reversing the index.
+    int lastIndex = allTransactions.size() - 1 - currentPage * PAGE_SIZE;
+    int firstIndex = Math.max(lastIndex - PAGE_SIZE + 1, 0);
+    for (int i = lastIndex; i >= firstIndex; i--) {
+      rowContainer.getChildren().add(buildRow(allTransactions.get(i)));
     }
+  }
+
+  private void wirePaginationButtons() {
+    prevButton.setOnAction(e -> {
+      if (currentPage > 0) {
+        currentPage--;
+        renderPage();
+      }
+    });
+    nextButton.setOnAction(e -> {
+      if (currentPage < totalPages() - 1) {
+        currentPage++;
+        renderPage();
+      }
+    });
+  }
+
+  private HBox buildPaginationRow() {
+    prevButton.getStyleClass().add("button-light-grey");
+    nextButton.getStyleClass().add("button-light-grey");
+    pageLabel.getStyleClass().addAll("font-white", "font-small");
+
+    Region leftSpacer = new Region();
+    Region rightSpacer = new Region();
+    HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+    HBox.setHgrow(rightSpacer, Priority.ALWAYS);
+
+    HBox row = new HBox(8, prevButton, leftSpacer, pageLabel, rightSpacer, nextButton);
+    row.setAlignment(Pos.CENTER);
+    return row;
   }
 
   private VBox buildRow(Transaction tx) {

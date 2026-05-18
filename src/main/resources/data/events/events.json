@@ -1,0 +1,228 @@
+{
+  "templates": [
+    {
+      "id": "software_patent_win",
+      "headline": "Tech giant wins landmark patent dispute",
+      "body": "A major software company has successfully defended its key patents, removing uncertainty around licensing revenue.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "minor_data_leak",
+      "headline": "Minor data breach reported at software firm",
+      "body": "A software company disclosed a limited data leak affecting a small subset of users. Regulators are monitoring.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "cloud_outage",
+      "headline": "Cloud provider suffers brief service outage",
+      "body": "A leading cloud platform experienced a multi-hour outage, disrupting downstream software services.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "bank_earnings_beat",
+      "headline": "Regional banks beat earnings estimates",
+      "body": "Several mid-size banks posted quarterly earnings above analyst forecasts, lifted by stronger loan demand.",
+      "sectors": ["FINANCE"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "regulatory_fine",
+      "headline": "Brokerage hit with trading conduct fine",
+      "body": "A brokerage was fined for inadequate trading oversight. The penalty is manageable but adds compliance costs.",
+      "sectors": ["FINANCE"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "fuel_price_uptick",
+      "headline": "Crude oil prices tick higher on inventory data",
+      "body": "Weekly crude inventory figures came in below expectations, nudging oil prices modestly higher.",
+      "sectors": ["ENERGY"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "refinery_maintenance",
+      "headline": "Refinery enters unplanned maintenance shutdown",
+      "body": "A mid-size refinery announced an unplanned maintenance outage, temporarily reducing regional fuel supply.",
+      "sectors": ["ENERGY"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "drug_trial_progress",
+      "headline": "Phase 2 drug trial shows promising early results",
+      "body": "A biotech firm reported favorable interim data from a Phase 2 trial for its lead compound.",
+      "sectors": ["HEALTHCARE"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "product_recall_minor",
+      "headline": "Medical device company issues limited recall",
+      "body": "A medical device maker recalled a small batch of diagnostic kits after quality concerns. No injuries reported.",
+      "sectors": ["HEALTHCARE"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "retail_sales_uptick",
+      "headline": "Consumer spending edges higher in latest data",
+      "body": "Monthly retail sales data showed a modest increase, driven by spending on clothing and electronics.",
+      "sectors": ["RETAIL"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "shipping_delay_minor",
+      "headline": "Port congestion causes minor shipping delays",
+      "body": "Congestion at a major container port has added one to two days to standard delivery windows.",
+      "sectors": ["RETAIL"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "factory_efficiency_gain",
+      "headline": "Automation upgrade boosts factory throughput",
+      "body": "An industrial manufacturer reported a productivity gain after completing a targeted automation upgrade.",
+      "sectors": ["INDUSTRIAL"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "parts_shortage",
+      "headline": "Component shortage disrupts manufacturing output",
+      "body": "A shortage of specialized electronic components is forcing several manufacturers to reduce production runs.",
+      "sectors": ["INDUSTRIAL"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "streaming_subscriber_surge",
+      "headline": "Streaming platform reports record subscriber growth",
+      "body": "A major streaming service announced its fastest subscriber growth quarter, buoyed by a hit original series.",
+      "sectors": ["ENTERTAINMENT"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "box_office_disappointment",
+      "headline": "Highly anticipated film underperforms at box office",
+      "body": "A widely promoted blockbuster opened well below analyst projections, raising concerns about the studio slate.",
+      "sectors": ["ENTERTAINMENT"],
+      "severity": "MINOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "ai_breakthrough",
+      "headline": "Major AI breakthrough announced by research lab",
+      "body": "A leading research lab unveiled a new model architecture that significantly outperforms existing benchmarks, signaling a step change in AI capabilities.",
+      "sectors": ["TECH"],
+      "severity": "MAJOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "cybersecurity_attack",
+      "headline": "Coordinated cyberattack hits major tech infrastructure",
+      "body": "A sophisticated ransomware campaign has struck several large technology firms, forcing systems offline and triggering incident response protocols.",
+      "sectors": ["TECH"],
+      "severity": "MAJOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "interest_rate_cut",
+      "headline": "Central bank cuts interest rates by 50 basis points",
+      "body": "In a surprise move, the central bank lowered its benchmark rate by half a percentage point, citing slowing inflation and supporting economic growth.",
+      "sectors": ["FINANCE"],
+      "severity": "MAJOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "bank_scandal",
+      "headline": "Major bank implicated in money laundering probe",
+      "body": "Regulators have opened a formal investigation into a major bank after suspicious transaction patterns were flagged. Criminal referrals are possible.",
+      "sectors": ["FINANCE"],
+      "severity": "MAJOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "pipeline_damage",
+      "headline": "Key pipeline damaged, supply cut by 20%",
+      "body": "Structural damage to a critical oil and gas pipeline has forced an emergency capacity reduction, tightening domestic energy supply.",
+      "sectors": ["ENERGY"],
+      "severity": "MAJOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "blockbuster_drug_approval",
+      "headline": "FDA approves long-awaited blockbuster drug",
+      "body": "The FDA granted approval for a high-profile treatment targeting a major chronic condition, opening a multi-billion-dollar market opportunity.",
+      "sectors": ["HEALTHCARE"],
+      "severity": "MAJOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "supply_chain_crisis",
+      "headline": "Global shipping crisis hits retail and manufacturing",
+      "body": "A combination of port strikes and container shortages is severely disrupting supply chains, delaying goods and inflating costs across retail and industrial sectors.",
+      "sectors": ["RETAIL", "INDUSTRIAL"],
+      "severity": "MAJOR",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "infrastructure_investment",
+      "headline": "Government announces major infrastructure stimulus",
+      "body": "A large government spending package targeting roads, bridges, and energy grids has been passed, boosting order books for heavy industrial companies.",
+      "sectors": ["INDUSTRIAL"],
+      "severity": "MAJOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "streaming_rights_deal",
+      "headline": "Entertainment giants seal landmark content rights deal",
+      "body": "Two major media companies agreed to an exclusive multi-year content licensing deal worth billions, reshaping streaming competition.",
+      "sectors": ["ENTERTAINMENT"],
+      "severity": "MAJOR",
+      "direction": "POSITIVE"
+    },
+    {
+      "id": "oil_rig_explosion",
+      "headline": "Offshore oil platform explosion halts production",
+      "body": "An explosion on a major offshore oil platform has forced a complete production shutdown. Environmental damage is spreading and restoration is expected to take months.",
+      "sectors": ["ENERGY"],
+      "severity": "CRISIS",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "market_flash_crash",
+      "headline": "Algorithmic trading error triggers market flash crash",
+      "body": "A runaway algorithmic trading strategy caused a rapid market-wide sell-off, erasing trillions in market value within minutes. Circuit breakers have been triggered.",
+      "sectors": ["FINANCE"],
+      "severity": "CRISIS",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "tech_monopoly_breakup",
+      "headline": "Court orders forced breakup of dominant tech monopoly",
+      "body": "A landmark antitrust ruling orders one of the world's largest technology companies to divest key business units within 18 months, reshaping the industry.",
+      "sectors": ["TECH"],
+      "severity": "CRISIS",
+      "direction": "NEGATIVE"
+    },
+    {
+      "id": "pandemic_outbreak",
+      "headline": "New infectious disease declared global health emergency",
+      "body": "The WHO declared a public health emergency following rapid spread of a novel pathogen. Lockdown measures are being considered, disrupting consumer activity.",
+      "sectors": ["HEALTHCARE", "RETAIL"],
+      "severity": "CRISIS",
+      "direction": "NEGATIVE"
+    }
+  ]
+}

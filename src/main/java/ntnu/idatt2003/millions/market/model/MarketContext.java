@@ -6,16 +6,12 @@ import ntnu.idatt2003.millions.market.service.ExchangeService;
 
 /**
  * Immutable bundle of everything {@link PriceModel} needs to compute
- * the next price for a stock.
+ * the next price for a single stock on a single tick.
  *
- * <p>Held by {@link ExchangeService} and passed to
- * {@link PriceModel#nextPrice} on every tick. Placeholder fields are
- * present for forward compatibility and default to zero until the
- * checkpoints that introduce them:
- * <ul>
- *   <li>{@code netDemand} — populated in checkpoint 4 (limit orders)</li>
- *   <li>{@code eventModifier} — populated in checkpoint 3 (random events)</li>
- * </ul>
+ * <p>A fresh instance is constructed per stock per tick by
+ * {@link ExchangeService#tick()}, so {@code eventModifier} carries
+ * the modifier for the specific stock this context was built for.
+ * Placeholder fields default to zero.
  */
 public record MarketContext(
     GameSettings settings,

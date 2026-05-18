@@ -56,5 +56,11 @@ public enum GameEvent {
   /**
    * A dividend was paid to a player for shares they hold.
    */
-  DIVIDEND_PAID
+  DIVIDEND_PAID,
+
+  /**
+   * A new {@link ntnu.idatt2003.millions.event.model.MarketEvent} was fired by
+   * {@link ntnu.idatt2003.millions.event.service.EventService}.
+   */
+  NEWS_EVENT_FIRED
 }

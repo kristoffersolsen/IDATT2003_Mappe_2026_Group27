@@ -1,0 +1,12 @@
+{
+  "templates": [
+    {
+      "id": "bad_sector",
+      "headline": "Bad sector event",
+      "body": "Event with unknown sector.",
+      "sectors": ["UNKNOWN_SECTOR"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    }
+  ]
+}

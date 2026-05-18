@@ -18,10 +18,9 @@ public class GameClock {
 
   private final ExchangeService exchangeService;
   private final GameSettings settings;
-  private long tickCount;
 
   /**
-   * Constructs a clock starting at tick zero.
+   * Constructs a clock backed by the given exchange service.
    *
    * @param exchangeService the exchange service to advance on each tick
    * @param settings        the game settings supplying calendar constants
@@ -29,7 +28,6 @@ public class GameClock {
   public GameClock(ExchangeService exchangeService, GameSettings settings) {
     this.exchangeService = exchangeService;
     this.settings = settings;
-    this.tickCount = 0L;
   }
 
   /**
@@ -48,7 +46,6 @@ public class GameClock {
     }
     for (int i = 0; i < hours; i++) {
       exchangeService.tick();
-      tickCount++;
     }
     exchangeService.getExchange().notifyObservers(GameEvent.SKIP_COMPLETED);
   }
@@ -56,10 +53,13 @@ public class GameClock {
   /**
    * Returns the total number of simulated hours elapsed since game start.
    *
+   * <p>Delegates to {@link Exchange#getTickCount()} which is the authoritative
+   * source of the simulation tick.
+   *
    * @return current tick count
    */
   public long getTickCount() {
-    return tickCount;
+    return exchangeService.getExchange().getTickCount();
   }
 
   /**
@@ -68,6 +68,6 @@ public class GameClock {
    * @return current game time
    */
   public GameTime currentTime() {
-    return new GameTime(settings, tickCount);
+    return new GameTime(settings, exchangeService.getExchange().getTickCount());
   }
 }
