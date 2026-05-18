@@ -1,0 +1,11 @@
+{
+  "templates": [
+    {
+      "id": "no_headline",
+      "body": "Event with missing headline.",
+      "sectors": ["TECH"],
+      "severity": "MINOR",
+      "direction": "POSITIVE"
+    }
+  ]
+}

@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import ntnu.idatt2003.millions.shared.config.Difficulty;
 import ntnu.idatt2003.millions.shared.config.GameSettings;
-import ntnu.idatt2003.millions.market.model.Stock;
+import ntnu.idatt2003.millions.shared.config.SeverityTuning;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,8 +47,7 @@ class PriceModelTest {
     @Test
     @DisplayName("same seed produces identical next price")
     void nextPrice_sameSeedGivesSameResult() {
-      GameSettings settings = new GameSettings(
-          Difficulty.NORMAL, 0, SEED, NORMAL_VOLATILITY, ZERO_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.NORMAL, NORMAL_VOLATILITY, ZERO_DRIFT);
       MarketContext ctx1 = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
       MarketContext ctx2 = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
 
@@ -63,8 +64,7 @@ class PriceModelTest {
     @Test
     @DisplayName("positive drift always raises price when volatility is zero")
     void nextPrice_positiveDriftRaisesPrice() {
-      GameSettings settings = new GameSettings(
-          Difficulty.EASY, 0, SEED, ZERO_VOLATILITY, POSITIVE_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.EASY, ZERO_VOLATILITY, POSITIVE_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
 
       BigDecimal newPrice = model.nextPrice(stock, ctx);
@@ -76,8 +76,7 @@ class PriceModelTest {
     @Test
     @DisplayName("negative drift always lowers price when volatility is zero")
     void nextPrice_negativeDriftLowersPrice() {
-      GameSettings settings = new GameSettings(
-          Difficulty.HARD, 0, SEED, ZERO_VOLATILITY, NEGATIVE_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.HARD, ZERO_VOLATILITY, NEGATIVE_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
 
       BigDecimal newPrice = model.nextPrice(stock, ctx);
@@ -89,8 +88,7 @@ class PriceModelTest {
     @Test
     @DisplayName("positive drift shifts sample mean above zero")
     void nextPrice_positiveDriftShiftsMeanUp() {
-      GameSettings settings = new GameSettings(
-          Difficulty.EASY, 0, SEED, NORMAL_VOLATILITY, POSITIVE_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.EASY, NORMAL_VOLATILITY, POSITIVE_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
       double sumReturns = 0.0;
 
@@ -115,8 +113,7 @@ class PriceModelTest {
     @DisplayName("sample standard deviation is close to configured volatility")
     void nextPrice_varianceMatchesVolatility() {
       double testVolatility = 0.02;
-      GameSettings settings = new GameSettings(
-          Difficulty.NORMAL, 0, SEED, testVolatility, ZERO_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.NORMAL, testVolatility, ZERO_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
       double[] returns = new double[SAMPLE_SIZE];
 
@@ -134,8 +131,7 @@ class PriceModelTest {
     @Test
     @DisplayName("zero drift bias keeps sample mean near zero")
     void nextPrice_zeroDriftKeepsMeanNearZero() {
-      GameSettings settings = new GameSettings(
-          Difficulty.NORMAL, 0, SEED, NORMAL_VOLATILITY, ZERO_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.NORMAL, NORMAL_VOLATILITY, ZERO_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, 0.0);
       double sumReturns = 0.0;
 
@@ -160,8 +156,7 @@ class PriceModelTest {
     @DisplayName("non-zero net demand shifts price in same direction as drift")
     void nextPrice_netDemandContributesToFactor() {
       double demand = 0.1;
-      GameSettings settings = new GameSettings(
-          Difficulty.NORMAL, 0, SEED, ZERO_VOLATILITY, ZERO_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.NORMAL, ZERO_VOLATILITY, ZERO_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), demand, 0.0);
 
       BigDecimal newPrice = model.nextPrice(stock, ctx);
@@ -174,8 +169,7 @@ class PriceModelTest {
     @DisplayName("non-zero event modifier shifts price in same direction")
     void nextPrice_eventModifierContributesToFactor() {
       double modifier = -0.1;
-      GameSettings settings = new GameSettings(
-          Difficulty.NORMAL, 0, SEED, ZERO_VOLATILITY, ZERO_DRIFT, 8, 5, 4);
+      GameSettings settings = makeSettings(Difficulty.NORMAL, ZERO_VOLATILITY, ZERO_DRIFT);
       MarketContext ctx = new MarketContext(settings, new Random(SEED), 0.0, modifier);
 
       BigDecimal newPrice = model.nextPrice(stock, ctx);
@@ -186,6 +180,15 @@ class PriceModelTest {
   }
 
   // ------------- helpers -------------
+
+  private static GameSettings makeSettings(Difficulty diff, double volatility, double drift) {
+    List<Double> probs = List.of(0.10, 0.25, 0.30, 0.25, 0.10);
+    Map<String, SeverityTuning> tuning = Map.of(
+        "MINOR", new SeverityTuning(0.70, 0.01, 0.03, 4, 12),
+        "MAJOR", new SeverityTuning(0.25, 0.04, 0.08, 24, 72),
+        "CRISIS", new SeverityTuning(0.05, 0.10, 0.20, 48, 168));
+    return new GameSettings(diff, 0, SEED, volatility, drift, 8, 5, 4, probs, tuning);
+  }
 
   private static double computeMean(double[] values) {
     double sum = 0.0;

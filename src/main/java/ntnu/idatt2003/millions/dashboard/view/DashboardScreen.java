@@ -1,5 +1,6 @@
 package ntnu.idatt2003.millions.dashboard.view;
 
+import java.util.stream.Collectors;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -7,11 +8,16 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import ntnu.idatt2003.millions.dashboard.controller.DashboardController;
+import ntnu.idatt2003.millions.event.model.EventSeverity;
+import ntnu.idatt2003.millions.event.model.MarketEvent;
 import ntnu.idatt2003.millions.market.view.MarketPanel;
 
 /**
@@ -33,7 +39,9 @@ import ntnu.idatt2003.millions.market.view.MarketPanel;
  */
 public class DashboardScreen {
 
-  private final BorderPane root;
+  private final StackPane root;
+  private final BorderPane dashboardPane;
+  private VBox modalOverlay;
 
   private final Label timeLabel = new Label("Wk 1 · Mon · 08:00");
   private final Button skip1hButton = new Button("+1h");
@@ -51,6 +59,7 @@ public class DashboardScreen {
   private final Button portfolioButton = new Button("Portfolio Details");
   private final Button transactionsButton = new Button("Recent Transactions");
   private final Button ordersButton = new Button("Pending Orders");
+  private final Button newsButton = new Button("News Feed");
 
   private final MarketPanel marketView = new MarketPanel();
   private final SplitPane mainSplit = new SplitPane();
@@ -59,17 +68,19 @@ public class DashboardScreen {
    * Builds the dashboard layout.
    */
   public DashboardScreen() {
-    root = new BorderPane();
-    root.getStyleClass().add("root");
+    dashboardPane = new BorderPane();
+    dashboardPane.getStyleClass().add("root");
 
     marketView.setMinWidth(120);
     mainSplit.getItems().add(marketView);
     SplitPane.setResizableWithParent(marketView, false);
     mainSplit.getStyleClass().add("main-split");
 
-    root.setTop(buildTopBar());
-    root.setCenter(mainSplit);
-    root.setBottom(buildBottomBar());
+    dashboardPane.setTop(buildTopBar());
+    dashboardPane.setCenter(mainSplit);
+    dashboardPane.setBottom(buildBottomBar());
+
+    root = new StackPane(dashboardPane);
   }
 
   /**
@@ -161,7 +172,7 @@ public class DashboardScreen {
   private HBox buildBottomBar() {
     VBox playerSection = buildPlayerSection();
     VBox assetsSection = buildAssetsSection();
-    VBox buttonsSection = buildButtonsSection();
+    GridPane buttonsSection = buildButtonsSection();
 
     Region leftSpacer = new Region();
     Region rightSpacer = new Region();
@@ -210,14 +221,113 @@ public class DashboardScreen {
     return row;
   }
 
-  private VBox buildButtonsSection() {
-    portfolioButton.setPrefWidth(180);
-    transactionsButton.setPrefWidth(180);
-    ordersButton.setPrefWidth(180);
-    return new VBox(8, portfolioButton, transactionsButton, ordersButton);
+  private GridPane buildButtonsSection() {
+    for (Button btn : new Button[]{portfolioButton, transactionsButton, ordersButton, newsButton}) {
+      btn.setMaxWidth(Double.MAX_VALUE);
+    }
+    GridPane grid = new GridPane();
+    grid.setHgap(8);
+    grid.setVgap(8);
+    grid.add(portfolioButton, 0, 0);
+    grid.add(transactionsButton, 1, 0);
+    grid.add(ordersButton, 0, 1);
+    grid.add(newsButton, 1, 1);
+    GridPane.setFillWidth(portfolioButton, true);
+    GridPane.setFillWidth(transactionsButton, true);
+    GridPane.setFillWidth(ordersButton, true);
+    GridPane.setFillWidth(newsButton, true);
+    ColumnConstraints half = new ColumnConstraints();
+    half.setPercentWidth(50);
+    ColumnConstraints half2 = new ColumnConstraints();
+    half2.setPercentWidth(50);
+    grid.getColumnConstraints().addAll(half, half2);
+    return grid;
   }
 
-  public BorderPane getRoot() {
+  /**
+   * Shows a full-screen modal overlay with the full details of a market event.
+   *
+   * <p>Clicking outside the card or the Close button dismisses the overlay.
+   *
+   * @param event the event to display
+   */
+  public void showEventModal(MarketEvent event) {
+    closeEventModal();
+
+    Label severityLabel = new Label(event.severity().name());
+    severityLabel.getStyleClass().addAll("font-small", severityBadgeClass(event.severity()));
+
+    Label headlineLabel = new Label(event.headline());
+    headlineLabel.getStyleClass().addAll("font-white", "font-title");
+    headlineLabel.setWrapText(true);
+
+    String sectorsText = event.sectors().stream()
+        .map(s -> s.name())
+        .sorted()
+        .collect(Collectors.joining(" · "));
+    Label sectorsLabel = new Label("Sectors: " + sectorsText);
+    sectorsLabel.getStyleClass().addAll("font-grey", "font-small");
+
+    Label bodyLabel = new Label(event.body());
+    bodyLabel.getStyleClass().addAll("font-grey", "font-content");
+    bodyLabel.setWrapText(true);
+
+    String impactSign = event.signedImpact() >= 0 ? "+" : "";
+    Label impactLabel = new Label(
+        "Market impact: " + impactSign + String.format("%.1f%%", event.signedImpact() * 100));
+    impactLabel.getStyleClass().addAll(
+        event.signedImpact() >= 0 ? "gain-positive" : "gain-negative", "font-small");
+
+    Button closeBtn = new Button("Close");
+    closeBtn.getStyleClass().add("button-light-grey");
+    closeBtn.setOnAction(e -> closeEventModal());
+
+    HBox closeRow = new HBox(closeBtn);
+    closeRow.setAlignment(Pos.CENTER_RIGHT);
+
+    VBox card = new VBox(12,
+        severityLabel, headlineLabel, sectorsLabel, bodyLabel, impactLabel, closeRow);
+    card.setPadding(new Insets(24));
+    card.setMaxWidth(480);
+    card.getStyleClass().add("news-modal-card");
+
+    modalOverlay = new VBox(card);
+    modalOverlay.setAlignment(Pos.CENTER);
+    modalOverlay.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+    modalOverlay.getStyleClass().add("modal-overlay");
+    modalOverlay.setOnMouseClicked(e -> {
+      if (e.getTarget() == modalOverlay) {
+        closeEventModal();
+      }
+    });
+
+    root.getChildren().add(modalOverlay);
+  }
+
+  /**
+   * Closes the event detail modal if one is currently open.
+   */
+  public void closeEventModal() {
+    if (modalOverlay != null) {
+      root.getChildren().remove(modalOverlay);
+      modalOverlay = null;
+    }
+  }
+
+  private static String severityBadgeClass(EventSeverity severity) {
+    return switch (severity) {
+      case MINOR -> "severity-minor";
+      case MAJOR -> "severity-major";
+      case CRISIS -> "severity-crisis";
+    };
+  }
+
+  /**
+   * Returns the root node of the dashboard.
+   *
+   * @return the root stack pane
+   */
+  public StackPane getRoot() {
     return root;
   }
 
@@ -251,6 +361,15 @@ public class DashboardScreen {
 
   public Button getOrdersButton() {
     return ordersButton;
+  }
+
+  /**
+   * Returns the news feed toggle button.
+   *
+   * @return the news button
+   */
+  public Button getNewsButton() {
+    return newsButton;
   }
 
   public MarketPanel getMarketView() {

@@ -20,6 +20,7 @@ import ntnu.idatt2003.millions.market.model.PriceModel;
 import ntnu.idatt2003.millions.shared.observer.GameEvent;
 import ntnu.idatt2003.millions.transaction.model.Transaction;
 import ntnu.idatt2003.millions.transaction.model.TransactionFactory;
+import ntnu.idatt2003.millions.event.service.EventService;
 import ntnu.idatt2003.millions.order.service.OrderService;
 import ntnu.idatt2003.millions.transaction.service.DividendService;
 import org.slf4j.Logger;
@@ -43,57 +44,70 @@ public class ExchangeService {
 
   private final Exchange exchange;
   private final PriceModel priceModel;
-  private final MarketContext marketContext;
+  private final GameSettings settings;
+  private final Random marketRandom;
+  private final OrderService orderService;
+  private final DividendService dividendService;
+  private final EventService eventService;
   private StockFileRecord stockFileRecord;
-  private OrderService orderService;
-  private DividendService dividendService;
 
   /**
-   * Package-private constructor used by the public factory methods.
+   * Package-private constructor used by the public factory and test entry points.
    *
-   * @param exchange      the exchange to operate on
-   * @param priceModel    the price model to use for simulation
-   * @param marketContext the market context providing settings and random source
+   * @param exchange        the exchange to operate on
+   * @param priceModel      the price model to use for simulation
+   * @param settings        game settings supplying volatility, drift bias, and seed
+   * @param marketRandom    the seeded random source shared across all per-tick contexts
+   * @param orderService    limit-order evaluator, may be {@code null} in tests
+   * @param dividendService dividend payer, may be {@code null} in tests
+   * @param eventService    event scheduler, may be {@code null} in tests
    */
-  ExchangeService(Exchange exchange, PriceModel priceModel, MarketContext marketContext) {
+  ExchangeService(Exchange exchange, PriceModel priceModel, GameSettings settings,
+      Random marketRandom, OrderService orderService, DividendService dividendService,
+      EventService eventService) {
     this.exchange = exchange;
     this.priceModel = priceModel;
-    this.marketContext = marketContext;
+    this.settings = settings;
+    this.marketRandom = marketRandom;
+    this.orderService = orderService;
+    this.dividendService = dividendService;
+    this.eventService = eventService;
   }
 
   /**
-   * Constructs a service from a {@link StockFileRecord}, building the
-   * exchange from the file's stock data and metadata.
+   * Constructs a fully-wired service for a game session.
    *
-   * <p>A default {@link PriceModel} is constructed automatically. The
-   * {@link MarketContext} is seeded from {@link GameSettings#randomSeed()}.
+   * <p>A default {@link PriceModel} is constructed automatically. The random
+   * source is seeded from {@link GameSettings#randomSeed()}.
    *
-   * @param name            exchange name
-   * @param stockFileRecord the file record to read stocks and tick from
+   * @param exchange        the pre-built exchange model
+   * @param stockFileRecord the file record associated with this exchange (for save)
    * @param settings        game settings supplying volatility, drift bias, and seed
+   * @param orderService    the limit-order service to evaluate each tick
+   * @param dividendService the dividend service to run each tick
+   * @param eventService    the event service to tick before price updates
    */
-  public ExchangeService(String name, StockFileRecord stockFileRecord, GameSettings settings) {
-    this(new Exchange(name,
-            stockFileRecord.getTick() == -1L ? 0L : stockFileRecord.getTick(),
-            stockFileRecord.getStocks()),
-        new PriceModel(),
-        new MarketContext(settings, new Random(settings.randomSeed()), 0.0, 0.0));
+  public ExchangeService(Exchange exchange, StockFileRecord stockFileRecord,
+      GameSettings settings, OrderService orderService, DividendService dividendService,
+      EventService eventService) {
+    this(exchange, new PriceModel(), settings, new Random(settings.randomSeed()),
+        orderService, dividendService, eventService);
     this.stockFileRecord = stockFileRecord;
   }
 
   /**
    * Creates a service wrapping the given exchange, intended for test use.
    *
-   * <p>Uses a default {@link PriceModel} and a deterministic
-   * {@link MarketContext} seeded with {@code 0} and NORMAL difficulty settings.
+   * <p>Uses a default {@link PriceModel}, NORMAL difficulty settings, and a
+   * deterministic random source seeded with {@code 0}.
    *
    * @param exchange the exchange to operate on
    * @return a new service ready for testing
    */
   public static ExchangeService forTesting(Exchange exchange) {
     GameSettings settings = GameDefaults.forDifficulty(Difficulty.NORMAL);
-    return new ExchangeService(exchange, new PriceModel(),
-        new MarketContext(settings, new Random(TESTING_SEED), 0.0, 0.0));
+    return new ExchangeService(exchange, new PriceModel(), settings, new Random(TESTING_SEED),
+        null, null, null);
   }
 
   /**
@@ -202,8 +216,6 @@ public class ExchangeService {
 
     Transaction transaction = TransactionFactory.createSale(shareToSell, exchange.getTickCount());
 
-    // Manually commit: bypass Sale.commit()'s contains() check since shareToSell
-    // is a new object. We own the pre-flight checks here in the service.
     player.addMoney(transaction.getCalculator().calculateTotal());
     portfolio.removeShare(heldShare, quantityToSell);
     player.getTransactionArchive().add(transaction);
@@ -211,32 +223,6 @@ public class ExchangeService {
 
     exchange.notifyObservers(GameEvent.STOCK_SOLD);
     return transaction;
-  }
-
-  /**
-   * Wires an {@link OrderService} so that pending limit orders are evaluated
-   * on every tick after prices are updated.
-   *
-   * <p>Called once during game setup, after both the exchange service and
-   * order service are constructed.
-   *
-   * @param orderService the order service to evaluate each tick
-   */
-  public void setOrderService(OrderService orderService) {
-    this.orderService = orderService;
-  }
-
-  /**
-   * Wires a {@link DividendService} so that dividends are paid on every
-   * eligible tick after order evaluation.
-   *
-   * <p>Called once during game setup, after both the exchange service and
-   * dividend service are constructed.
-   *
-   * @param dividendService the dividend service to call each tick
-   */
-  public void setDividendService(DividendService dividendService) {
-    this.dividendService = dividendService;
   }
 
   /**
@@ -255,8 +241,13 @@ public class ExchangeService {
    * hour in a skip loop.
    */
   public void tick() {
+    if (eventService != null) {
+      eventService.tick(exchange.getTickCount(), settings, marketRandom);
+    }
     for (Stock stock : exchange.getStocks()) {
-      stock.addNewSalesPrice(priceModel.nextPrice(stock, marketContext));
+      double modifier = eventService != null ? eventService.modifierFor(stock) : 0.0;
+      MarketContext context = new MarketContext(settings, marketRandom, 0.0, modifier);
+      stock.addNewSalesPrice(priceModel.nextPrice(stock, context));
     }
     exchange.incrementTick();
     if (orderService != null) {

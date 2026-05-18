@@ -3,6 +3,8 @@ package ntnu.idatt2003.millions.shared.config;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,12 @@ class GameSettingsTest {
   private static final int DAYS_PER_WEEK = 5;
   private static final int WEEKS_PER_MONTH = 4;
 
+  private static final List<Double> DEFAULT_PROBS = List.of(0.10, 0.25, 0.30, 0.25, 0.10);
+  private static final Map<String, SeverityTuning> DEFAULT_TUNING = Map.of(
+      "MINOR", new SeverityTuning(0.70, 0.01, 0.03, 4, 12),
+      "MAJOR", new SeverityTuning(0.25, 0.04, 0.08, 24, 72),
+      "CRISIS", new SeverityTuning(0.05, 0.10, 0.20, 48, 168));
+
   @Nested
   @DisplayName("fields")
   class Fields {
@@ -26,7 +34,8 @@ class GameSettingsTest {
     void fields_roundTrip() {
       GameSettings settings = new GameSettings(
           Difficulty.NORMAL, 0, SEED, VOLATILITY, DRIFT_BIAS,
-          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH);
+          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH,
+          DEFAULT_PROBS, DEFAULT_TUNING);
 
       assertEquals(Difficulty.NORMAL, settings.difficulty());
       assertEquals(0, settings.aiCount());
@@ -48,10 +57,12 @@ class GameSettingsTest {
     void equals_sameComponents() {
       GameSettings a = new GameSettings(
           Difficulty.EASY, 0, SEED, 0.005, 0.0002,
-          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH);
+          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH,
+          DEFAULT_PROBS, DEFAULT_TUNING);
       GameSettings b = new GameSettings(
           Difficulty.EASY, 0, SEED, 0.005, 0.0002,
-          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH);
+          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH,
+          DEFAULT_PROBS, DEFAULT_TUNING);
 
       assertEquals(a, b);
       assertEquals(a.hashCode(), b.hashCode());
@@ -62,10 +73,12 @@ class GameSettingsTest {
     void equals_differentDifficulty() {
       GameSettings easy = new GameSettings(
           Difficulty.EASY, 0, SEED, 0.005, 0.0002,
-          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH);
+          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH,
+          DEFAULT_PROBS, DEFAULT_TUNING);
       GameSettings hard = new GameSettings(
           Difficulty.HARD, 0, SEED, 0.012, -0.0001,
-          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH);
+          HOURS_PER_DAY, DAYS_PER_WEEK, WEEKS_PER_MONTH,
+          DEFAULT_PROBS, DEFAULT_TUNING);
 
       assertNotEquals(easy, hard);
     }

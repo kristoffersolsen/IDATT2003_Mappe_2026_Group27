@@ -1,7 +1,10 @@
 package ntnu.idatt2003.millions.dashboard.controller;
 
 import java.math.BigDecimal;
+import javafx.scene.layout.VBox;
 import ntnu.idatt2003.millions.app.config.GameContext;
+import ntnu.idatt2003.millions.event.controller.NewsController;
+import ntnu.idatt2003.millions.event.view.NewsPanel;
 import ntnu.idatt2003.millions.market.model.Exchange;
 import ntnu.idatt2003.millions.player.model.Player;
 import ntnu.idatt2003.millions.player.model.Share;
@@ -38,7 +41,7 @@ public class DashboardController implements GameObserver {
 
   private static final int SKIP_FIVE_HOURS = 5;
 
-  private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS, ORDERS }
+  private enum RightPanel { NONE, PORTFOLIO, TRANSACTIONS, ORDERS, NEWS }
 
   private final DashboardScreen view;
   private final Player player;
@@ -52,8 +55,11 @@ public class DashboardController implements GameObserver {
   private final PortfolioPanel portfolioPanel;
   private final TransactionsPanel transactionsPanel;
   private final OrdersPanel ordersPanel;
+  private final NewsPanel newsPanel;
+  private final NewsController newsController;
 
   private RightPanel currentRightPanel = RightPanel.NONE;
+  private boolean hasPendingNews = false;
 
   /**
    * Creates the controller, registers as observer, and performs initial refresh.
@@ -80,6 +86,16 @@ public class DashboardController implements GameObserver {
     this.transactionsPanel = new TransactionsPanel();
     this.ordersPanel = new OrdersPanel(this::onCancelOrder);
 
+    if (context.eventService() != null) {
+      this.newsPanel = new NewsPanel();
+      this.newsController = new NewsController(newsPanel, context.eventService(),
+          view::showEventModal);
+      context.eventService().addObserver(this);
+    } else {
+      this.newsPanel = null;
+      this.newsController = null;
+    }
+
     StockDetailView stockDetailView = new StockDetailView();
     view.setCenterPanel(stockDetailView);
     this.stockDetailController = new StockDetailController(
@@ -99,6 +115,7 @@ public class DashboardController implements GameObserver {
     wirePortfolioButton();
     wireTransactionsButton();
     wireOrdersButton();
+    wireNewsButton();
 
     exchangeService.getExchange().getStocks().stream()
         .findFirst()
@@ -110,10 +127,15 @@ public class DashboardController implements GameObserver {
   @Override
   public void onEvent(Object source, GameEvent event) {
     switch (event) {
+      case NEWS_EVENT_FIRED -> hasPendingNews = true;
       case SKIP_COMPLETED -> {
         marketController.refresh();
         stockDetailController.refresh();
         refresh();
+        if (hasPendingNews) {
+          showPanel(RightPanel.NEWS);
+          hasPendingNews = false;
+        }
       }
       case STOCK_PURCHASED, STOCK_SOLD, BALANCE_CHANGED, PORTFOLIO_CHANGED -> {
         stockDetailController.refresh();
@@ -138,6 +160,9 @@ public class DashboardController implements GameObserver {
   public void dispose() {
     exchangeService.getExchange().removeObserver(this);
     player.removeObserver(this);
+    if (context.eventService() != null) {
+      context.eventService().removeObserver(this);
+    }
   }
 
   private void onStockSelected(Stock stock) {
@@ -197,18 +222,34 @@ public class DashboardController implements GameObserver {
     view.getOrdersButton().setOnAction(e -> toggleRightPanel(RightPanel.ORDERS));
   }
 
+  private void wireNewsButton() {
+    view.getNewsButton().setOnAction(e -> toggleRightPanel(RightPanel.NEWS));
+  }
+
   private void toggleRightPanel(RightPanel panel) {
     if (currentRightPanel == panel) {
       view.setRightPanel(null);
       currentRightPanel = RightPanel.NONE;
     } else {
-      view.setRightPanel(switch (panel) {
-        case PORTFOLIO -> portfolioPanel;
-        case TRANSACTIONS -> transactionsPanel;
-        case ORDERS -> ordersPanel;
-        default -> null;
-      });
-      currentRightPanel = panel;
+      showPanel(panel);
+    }
+  }
+
+  private void showPanel(RightPanel panel) {
+    VBox panelView = switch (panel) {
+      case PORTFOLIO -> portfolioPanel;
+      case TRANSACTIONS -> transactionsPanel;
+      case ORDERS -> ordersPanel;
+      case NEWS -> newsPanel;
+      default -> null;
+    };
+    if (panelView == null) {
+      return;
+    }
+    view.setRightPanel(panelView);
+    currentRightPanel = panel;
+    if (panel == RightPanel.NEWS && newsController != null) {
+      newsController.markPanelOpened();
     }
   }
 

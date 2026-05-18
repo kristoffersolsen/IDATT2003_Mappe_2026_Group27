@@ -1,6 +1,5 @@
 package ntnu.idatt2003.millions.app.config;
 
-import java.util.Random;
 import ntnu.idatt2003.millions.shared.config.Difficulty;
 import ntnu.idatt2003.millions.shared.config.GameDefaults;
 import ntnu.idatt2003.millions.shared.config.GameSettings;
@@ -26,13 +25,6 @@ public final class TestGameContext {
    */
   public static GameContext defaults() {
     GameSettings settings = GameDefaults.forDifficulty(Difficulty.NORMAL);
-    return new GameContext(
-        settings,
-        new Random(settings.randomSeed()),
-        null,
-        null,
-        null,
-        null
-    );
+    return new GameContext(settings, null, null, null, null);
   }
 }
